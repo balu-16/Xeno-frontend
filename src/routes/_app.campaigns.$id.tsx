@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, AlertTriangle, Radio, RefreshCw } from "lucide-react";
+import { ArrowLeft, AlertTriangle, ChevronRight, Radio, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
 import { Funnel } from "@/components/Funnel";
 import { ErrorState, LoadingState } from "@/components/QueryState";
@@ -65,12 +65,27 @@ function CampaignDetails() {
   const metrics = performance.data!;
   return (
     <Page>
+      <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-4">
+        <Link to="/dashboard" className="hover:text-indigo-600 transition-colors">
+          Dashboard
+        </Link>
+        <ChevronRight className="h-3 w-3" />
+        <Link
+          to="/campaigns"
+          search={{ segmentId: undefined }}
+          className="hover:text-indigo-600 transition-colors"
+        >
+          Campaigns
+        </Link>
+        <ChevronRight className="h-3 w-3" />
+        <span className="text-slate-600 font-medium">{item.name}</span>
+      </nav>
       <Link
         to="/campaigns"
         search={{ segmentId: undefined }}
         className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-indigo-600"
       >
-        <ArrowLeft className="h-4 w-4" /> Campaigns
+        <ArrowLeft className="h-4 w-4" /> Back to campaigns
       </Link>
       <div className="mt-5 flex items-start justify-between gap-4">
         <div>

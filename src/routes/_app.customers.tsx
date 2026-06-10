@@ -1,12 +1,13 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronLeft, ChevronRight, Search, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Search, Users } from "lucide-react";
 import { useState } from "react";
 import { CustomerDetailDialog } from "@/components/CustomerDetailDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState, ErrorState } from "@/components/QueryState";
 import { TableSkeleton } from "@/components/Skeleton";
 import { api } from "@/lib/api";
+import { downloadCSV } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/customers")({
   head: () => ({ meta: [{ title: "Customers · Xeno Mini" }] }),
@@ -34,6 +35,29 @@ function Customers() {
       <PageHeader
         title="Customers"
         subtitle="Searchable shopper profiles, orders, value, and behavioral metadata."
+        action={
+          query.data && query.data.data.length > 0 ? (
+            <button
+              onClick={() =>
+                downloadCSV(
+                  "customers.csv",
+                  query.data!.data.map((c) => ({
+                    Name: c.name,
+                    Email: c.email,
+                    Phone: c.phone,
+                    City: c.metadata.city ?? "Unknown",
+                    Orders: c.orders,
+                    "Lifetime Value": c.lifetimeValue,
+                    "Last Activity": new Date(c.lastActivity).toLocaleDateString(),
+                  })),
+                )
+              }
+              className="h-9 px-4 rounded-lg border border-slate-200 text-sm text-slate-600 flex items-center gap-2 hover:bg-slate-50"
+            >
+              <Download className="h-4 w-4" /> Export CSV
+            </button>
+          ) : undefined
+        }
       />
       <div className="bg-white border border-slate-200/70 rounded-xl overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex items-center gap-3">
@@ -61,6 +85,7 @@ function Customers() {
           <EmptyState
             title="No customers found"
             description="Try a different search term."
+            illustration="customers"
           />
         ) : (
           <>

@@ -222,6 +222,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  updateSegmentName: (id: string, name: string) =>
+    request<Segment>(`/segments/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ name }),
+    }),
   campaigns: (page = 1, search = "") =>
     request<{ data: Campaign[]; meta: PageMeta }>(
       `/campaigns${queryString({ page, pageSize: 50, search })}`,

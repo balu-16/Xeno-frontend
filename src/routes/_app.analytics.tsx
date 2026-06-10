@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Download } from "lucide-react";
 import { useState } from "react";
 import {
   Bar,
@@ -11,10 +12,11 @@ import {
   YAxis,
 } from "recharts";
 import { PageHeader } from "@/components/PageHeader";
-import { ErrorState } from "@/components/QueryState";
+import { EmptyState, ErrorState } from "@/components/QueryState";
 import { AnalyticsSkeleton } from "@/components/Skeleton";
 import { useCountUp } from "@/lib/useCountUp";
 import { api } from "@/lib/api";
+import { downloadCSV } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/analytics")({
   head: () => ({ meta: [{ title: "Analytics · Xeno Mini" }] }),
@@ -83,6 +85,27 @@ function Analytics() {
       <PageHeader
         title="Global Analytics"
         subtitle="Cross-campaign performance, attribution, channels, and segments."
+        action={
+          <button
+            onClick={() =>
+              downloadCSV(
+                "analytics.csv",
+                campaigns.map((c) => ({
+                  Campaign: c.name,
+                  Channel: c.channel,
+                  "Delivery Rate": `${c.analytics?.deliveryRate.toFixed(1) ?? 0}%`,
+                  "Open Rate": `${c.analytics?.openRate.toFixed(1) ?? 0}%`,
+                  "Click Rate": `${c.analytics?.clickRate.toFixed(1) ?? 0}%`,
+                  "Conversion Rate": `${c.analytics?.conversionRate.toFixed(1) ?? 0}%`,
+                  Revenue: Number(c.analytics?.revenueAccrued ?? 0),
+                })),
+              )
+            }
+            className="h-9 px-4 rounded-lg border border-slate-200 text-sm text-slate-600 flex items-center gap-2 hover:bg-slate-50"
+          >
+            <Download className="h-4 w-4" /> Export CSV
+          </button>
+        }
       />
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
@@ -95,61 +118,69 @@ function Analytics() {
         ))}
       </div>
       <FunnelChart funnel={funnel} />
-      <div className="mt-4 bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="p-5 border-b border-slate-100">
-          <h2 className="font-semibold">Campaign comparison</h2>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-slate-100">
-                <th className="px-5 py-3 font-medium">Campaign</th>
-                <th className="px-5 py-3 font-medium">Channel</th>
-                <th className="px-5 py-3 font-medium text-right">Delivery</th>
-                <th className="px-5 py-3 font-medium text-right">Open</th>
-                <th className="px-5 py-3 font-medium text-right">Click</th>
-                <th className="px-5 py-3 font-medium text-right">Conversion</th>
-                <th className="px-5 py-3 font-medium text-right">Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-              {campaigns.map((campaign) => (
-                <tr key={campaign.id} className="border-b border-slate-50">
-                  <td className="px-5 py-4">
-                    <Link
-                      to="/campaigns/$id"
-                      params={{ id: campaign.id }}
-                      search={{ segmentId: undefined }}
-                      className="font-medium hover:text-indigo-600"
-                    >
-                      {campaign.name}
-                    </Link>
-                  </td>
-                  <td className="px-5 py-4">{campaign.channel}</td>
-                  <td className="px-5 py-4 text-right">
-                    {campaign.analytics?.deliveryRate.toFixed(1) ?? "0"}%
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    {campaign.analytics?.openRate.toFixed(1) ?? "0"}%
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    {campaign.analytics?.clickRate.toFixed(1) ?? "0"}%
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    {campaign.analytics?.conversionRate.toFixed(1) ?? "0"}%
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    ₹
-                    {Number(
-                      campaign.analytics?.revenueAccrued ?? 0,
-                    ).toLocaleString()}
-                  </td>
+      {campaigns.length === 0 ? (
+        <EmptyState
+          title="No campaign data yet"
+          description="Launch your first campaign to see performance analytics here."
+          illustration="analytics"
+        />
+      ) : (
+        <div className="mt-4 bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="p-5 border-b border-slate-100">
+            <h2 className="font-semibold">Campaign comparison</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-slate-100">
+                  <th className="px-5 py-3 font-medium">Campaign</th>
+                  <th className="px-5 py-3 font-medium">Channel</th>
+                  <th className="px-5 py-3 font-medium text-right">Delivery</th>
+                  <th className="px-5 py-3 font-medium text-right">Open</th>
+                  <th className="px-5 py-3 font-medium text-right">Click</th>
+                  <th className="px-5 py-3 font-medium text-right">Conversion</th>
+                  <th className="px-5 py-3 font-medium text-right">Revenue</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {campaigns.map((campaign) => (
+                  <tr key={campaign.id} className="border-b border-slate-50">
+                    <td className="px-5 py-4">
+                      <Link
+                        to="/campaigns/$id"
+                        params={{ id: campaign.id }}
+                        search={{ segmentId: undefined }}
+                        className="font-medium hover:text-indigo-600"
+                      >
+                        {campaign.name}
+                      </Link>
+                    </td>
+                    <td className="px-5 py-4">{campaign.channel}</td>
+                    <td className="px-5 py-4 text-right">
+                      {campaign.analytics?.deliveryRate.toFixed(1) ?? "0"}%
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      {campaign.analytics?.openRate.toFixed(1) ?? "0"}%
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      {campaign.analytics?.clickRate.toFixed(1) ?? "0"}%
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      {campaign.analytics?.conversionRate.toFixed(1) ?? "0"}%
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      ₹
+                      {Number(
+                        campaign.analytics?.revenueAccrued ?? 0,
+                      ).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </Page>
   );
 }

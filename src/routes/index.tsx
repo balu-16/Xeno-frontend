@@ -13,6 +13,21 @@ import {
   Zap,
 } from "lucide-react";
 import { useEffect } from "react";
+import { useInView } from "@/lib/useInView";
+
+function AnimatedSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const { ref, isInView } = useInView();
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ease-out ${
+        isInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -143,7 +158,7 @@ function Landing() {
       {/* Features */}
       <section id="features" className="py-16 sm:py-24 bg-slate-50/60 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-10 sm:mb-16">
+          <AnimatedSection className="text-center mb-10 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
               Everything you need to{" "}
               <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -154,7 +169,7 @@ function Landing() {
               From audience discovery to campaign delivery, Xeno Mini handles the
               entire marketing lifecycle.
             </p>
-          </div>
+          </AnimatedSection>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[
               {
@@ -228,6 +243,7 @@ function Landing() {
       {/* About */}
       <section id="about" className="py-16 sm:py-24 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <AnimatedSection>
           <div className="grid lg:grid-cols-2 gap-10 sm:gap-16 items-center">
             <div>
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
@@ -299,12 +315,14 @@ function Landing() {
               </div>
             </div>
           </div>
+          </AnimatedSection>
         </div>
       </section>
 
       {/* CTA */}
       <section className="py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <AnimatedSection>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
             Ready to replace your marketing stack?
           </h2>
@@ -326,6 +344,7 @@ function Landing() {
               Contact Sales
             </a>
           </div>
+          </AnimatedSection>
         </div>
       </section>
 

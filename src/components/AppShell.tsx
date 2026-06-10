@@ -86,7 +86,7 @@ export function AppShell() {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === "n" && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
-        void navigate({ to: "/campaigns" });
+        void navigate({ to: "/campaigns", search: { segmentId: undefined } });
       }
     };
     document.addEventListener("keydown", handler);
@@ -159,6 +159,17 @@ export function AppShell() {
             <span className="font-semibold tracking-tight whitespace-nowrap">
               Xeno Mini
             </span>
+          )}
+          {!collapsed && (
+            <div className="ml-auto flex items-center gap-1">
+              <NotificationCenter />
+              <button
+                onClick={() => setMobileOpen(false)}
+                className="md:hidden h-9 w-9 rounded-lg grid place-items-center text-slate-400 hover:bg-slate-100"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           )}
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">

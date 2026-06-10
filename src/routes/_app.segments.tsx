@@ -7,6 +7,7 @@ import {
   type SegmentRuleGroup,
 } from "../lib/contracts";
 import { toast } from "sonner";
+import { EditableText } from "@/components/EditableText";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState, ErrorState } from "@/components/QueryState";
 import { Skeleton } from "@/components/Skeleton";
@@ -68,6 +69,14 @@ function Segments() {
       toast.success("Segment saved");
     },
   });
+  const updateName = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      api.updateSegmentName(id, name),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["segments"] });
+      toast.success("Segment renamed");
+    },
+  });
 
   return (
     <div className="px-8 py-8 max-w-[1400px] mx-auto">
@@ -108,6 +117,7 @@ function Segments() {
         <EmptyState
           title="No segments yet"
           description="Generate your first target audience with AI."
+          illustration="segments"
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -124,7 +134,11 @@ function Segments() {
                   {new Date(segment.createdAt).toLocaleDateString()}
                 </span>
               </div>
-              <h3 className="mt-4 font-semibold">{segment.name}</h3>
+              <EditableText
+                value={segment.name}
+                onSave={(name) => updateName.mutate({ id: segment.id, name })}
+                className="mt-4 font-semibold"
+              />
               <div className="mt-1 text-2xl font-semibold">
                 {segment.audienceSize.toLocaleString()}
               </div>

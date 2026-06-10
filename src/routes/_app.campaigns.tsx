@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
+  Download,
   Mail,
   MessageSquare,
   Phone,
@@ -20,6 +21,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { EmptyState, ErrorState } from "@/components/QueryState";
 import { TableSkeleton } from "@/components/Skeleton";
 import { api } from "@/lib/api";
+import { downloadCSV } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/campaigns")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -155,15 +157,39 @@ function Campaigns() {
         title="Campaigns"
         subtitle="Select an audience, compose a message, launch, and monitor the full lifecycle."
         action={
-          <button
-            onClick={() => {
-              reset();
-              setOpen(true);
-            }}
-            className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> Create campaign
-          </button>
+          <div className="flex items-center gap-2">
+            {campaigns.data && campaigns.data.data.length > 0 && (
+              <button
+                onClick={() =>
+                  downloadCSV(
+                    "campaigns.csv",
+                    campaigns.data!.data.map((c) => ({
+                      Name: c.name,
+                      Segment: c.segment.name,
+                      Channel: c.channel,
+                      Status: c.status,
+                      Audience: c.audienceSizeSnapshot,
+                      "Open Rate": c.analytics
+                        ? `${c.analytics.openRate.toFixed(1)}%`
+                        : "—",
+                    })),
+                  )
+                }
+                className="h-9 px-4 rounded-lg border border-slate-200 text-sm text-slate-600 flex items-center gap-2 hover:bg-slate-50"
+              >
+                <Download className="h-4 w-4" /> Export CSV
+              </button>
+            )}
+            <button
+              onClick={() => {
+                reset();
+                setOpen(true);
+              }}
+              className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> Create campaign
+            </button>
+          </div>
         }
       />
       {campaigns.isLoading ? (
@@ -177,6 +203,7 @@ function Campaigns() {
         <EmptyState
           title="No campaigns yet"
           description="Create a campaign from a saved segment."
+          illustration="campaigns"
         />
       ) : (
         <div className="bg-white border border-slate-200/70 rounded-xl overflow-hidden">
