@@ -107,11 +107,12 @@ export function AIPanel() {
               Every answer is tool-grounded
             </p>
           </div>
-          <button className="h-8 w-8 grid place-items-center rounded-md text-slate-400 hover:bg-slate-100">
+          <button aria-label="Minimize AI panel" className="h-8 w-8 grid place-items-center rounded-md text-slate-400 hover:bg-slate-100">
             <Minus className="h-4 w-4" />
           </button>
           <button
             onClick={() => setOpen(false)}
+            aria-label="Close AI panel"
             className="h-8 w-8 grid place-items-center rounded-md text-slate-400 hover:bg-slate-100"
           >
             <X className="h-4 w-4" />

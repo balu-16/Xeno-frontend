@@ -8,7 +8,7 @@ import type {
 
 const API_URL =
   (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ??
-  (import.meta.env.PROD ? "/api" : "http://localhost:3000/api");
+  (import.meta.env.PROD ? "/api/v1" : "http://localhost:3000/api/v1");
 
 export class ApiError extends Error {
   constructor(
@@ -17,6 +17,8 @@ export class ApiError extends Error {
     readonly code?: string,
   ) {
     super(message);
+    this.name = "ApiError";
+    Object.setPrototypeOf(this, ApiError.prototype);
   }
 }
 
@@ -68,7 +70,7 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "MEMBER";
+  role: "ADMIN" | "MANAGER" | "MEMBER";
 };
 
 export type PageMeta = {
@@ -83,6 +85,7 @@ export type Customer = {
   name: string;
   email: string;
   phone: string;
+  tags: string[];
   metadata: Record<string, unknown>;
   orders: number;
   lifetimeValue: number;
@@ -94,6 +97,7 @@ export type CustomerDetail = {
   name: string;
   email: string;
   phone: string;
+  tags: string[];
   metadata: Record<string, unknown>;
   createdAt: string;
   orders: Array<{
@@ -132,7 +136,7 @@ export type Campaign = {
   name: string;
   segmentId: string;
   channel: Channel;
-  status: "DRAFT" | "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED";
+  status: "DRAFT" | "SCHEDULED" | "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED";
   subject: string | null;
   message: string;
   audienceSizeSnapshot: number;
@@ -188,13 +192,24 @@ export const api = {
     request<{ loggedOut: true }>("/auth/logout", { method: "POST" }),
   me: () => request<{ user: User }>("/auth/me"),
   dashboard: () => request<DashboardMetrics>("/dashboard"),
-  customers: (page: number, search: string) =>
+  customers: (page: number, search: string, tag?: string) =>
     request<{ data: Customer[]; meta: PageMeta }>(
-      `/customers${queryString({ page, pageSize: 20, search })}`,
+      `/customers${queryString({ page, pageSize: 20, search, tag })}`,
     ),
   customer: (id: string) => request<CustomerDetail>(`/customers/${id}`),
   customerLoginLogs: (id: string) =>
     request<LoginLog[]>(`/customers/${id}/login-logs`),
+  customerCommunications: (id: string) =>
+    request<Array<{
+      campaignId: string;
+      campaignName: string;
+      events: Array<{
+        type: string;
+        occurredAt: string;
+        payload: unknown;
+      }>;
+    }>>(`/customers/${id}/communications`),
+  customerTags: () => request<string[]>("/customers/tags"),
   segments: (page = 1, search = "") =>
     request<{ data: Segment[]; meta: PageMeta }>(
       `/segments${queryString({ page, pageSize: 50, search })}`,
@@ -227,9 +242,9 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify({ name }),
     }),
-  campaigns: (page = 1, search = "") =>
+  campaigns: (page = 1, search = "", status = "") =>
     request<{ data: Campaign[]; meta: PageMeta }>(
-      `/campaigns${queryString({ page, pageSize: 50, search })}`,
+      `/campaigns${queryString({ page, pageSize: 50, search, status })}`,
     ),
   createCampaign: (input: {
     name: string;
@@ -237,6 +252,7 @@ export const api = {
     channel: Channel;
     subject?: string;
     message: string;
+    scheduledAt?: string;
   }) =>
     request<Campaign>("/campaigns", {
       method: "POST",

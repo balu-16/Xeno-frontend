@@ -6,6 +6,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -229,15 +230,15 @@ function FunnelChart({ funnel }: { funnel: { stage: string; value: number }[] })
                 );
               }}
             />
-            {funnel.map((_, index) => (
-              <Bar
-                key={index}
-                dataKey="value"
-                fill={activeIndex === index ? "#3730a3" : "#4f46e5"}
-                radius={[6, 6, 0, 0]}
-                fillOpacity={activeIndex === null || activeIndex === index ? 1 : 0.4}
-              />
-            ))}
+            <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+              {funnel.map((_, index) => (
+                <Cell
+                  key={index}
+                  fill={activeIndex === index ? "#3730a3" : "#4f46e5"}
+                  fillOpacity={activeIndex === null || activeIndex === index ? 1 : 0.4}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>

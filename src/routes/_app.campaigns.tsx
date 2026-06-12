@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowLeft,
   ArrowRight,
+  Calendar,
   Check,
   Download,
   Mail,
@@ -10,17 +11,18 @@ import {
   Phone,
   Plus,
   Radio,
+  Search,
   Sparkles,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Channel } from "../lib/contracts";
 import { toast } from "sonner";
 import { CampaignDetailDialog } from "@/components/CampaignDetailDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState, ErrorState } from "@/components/QueryState";
 import { TableSkeleton } from "@/components/Skeleton";
-import { api } from "@/lib/api";
+import { api, type User } from "@/lib/api";
 import { downloadCSV } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/campaigns")({
@@ -43,7 +45,7 @@ const channels: Array<{
   { value: "RCS", label: "RCS", icon: Radio },
 ];
 
-const steps = ["Segment", "Channel", "Message", "Audience", "Launch"];
+const steps = ["Segment", "Channel", "Message", "Schedule", "Audience", "Launch"];
 
 function Campaigns() {
   const search = Route.useSearch();
@@ -61,9 +63,34 @@ function Campaigns() {
   );
   const [draftId, setDraftId] = useState<string>();
   const [audienceSize, setAudienceSize] = useState<number>();
+  const [confirmLaunch, setConfirmLaunch] = useState(false);
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduledAt, setScheduledAt] = useState("");
+
+  // Search and filter state
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const onSearchChange = (value: string) => {
+    setSearchInput(value);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setSearchQuery(value);
+    }, 350);
+  };
+
+  const auth = useQuery({
+    queryKey: ["auth", "me"],
+    queryFn: api.me,
+    staleTime: 5 * 60 * 1000,
+  });
+  const userRole: User["role"] = auth.data?.user.role ?? "MEMBER";
+  const isMember = userRole === "MEMBER";
+
   const campaigns = useQuery({
-    queryKey: ["campaigns"],
-    queryFn: () => api.campaigns(),
+    queryKey: ["campaigns", searchQuery, statusFilter],
+    queryFn: () => api.campaigns(1, searchQuery, statusFilter),
   });
   const segments = useQuery({
     queryKey: ["segments"],
@@ -77,6 +104,7 @@ function Campaigns() {
         channel,
         subject: channel === "EMAIL" ? subject : undefined,
         message,
+        scheduledAt: isScheduled && scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
       });
       const preview = await api.previewCampaign(campaign.id);
       return { campaign, preview };
@@ -84,7 +112,7 @@ function Campaigns() {
     onSuccess: ({ campaign, preview }) => {
       setDraftId(campaign.id);
       setAudienceSize(preview.audienceSize);
-      setStep(3);
+      setStep(4);
       void queryClient.invalidateQueries({ queryKey: ["campaigns"] });
     },
   });
@@ -132,6 +160,9 @@ function Campaigns() {
     setStep(0);
     setDraftId(undefined);
     setAudienceSize(undefined);
+    setConfirmLaunch(false);
+    setIsScheduled(false);
+    setScheduledAt("");
     setName("New Campaign");
     setSubject("A special offer for {{first_name}}");
     setMessage(
@@ -140,15 +171,15 @@ function Campaigns() {
   };
 
   const continueWizard = () => {
-    if (step === 2) {
+    if (step === 3) {
       prepare.mutate();
       return;
     }
-    if (step === 3) {
-      setStep(4);
+    if (step === 4) {
+      setStep(5);
       return;
     }
-    setStep((value) => Math.min(4, value + 1));
+    setStep((value) => Math.min(5, value + 1));
   };
 
   return (
@@ -180,18 +211,49 @@ function Campaigns() {
                 <Download className="h-4 w-4" /> Export CSV
               </button>
             )}
-            <button
-              onClick={() => {
-                reset();
-                setOpen(true);
-              }}
-              className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" /> Create campaign
-            </button>
+            {!isMember && (
+              <button
+                onClick={() => {
+                  reset();
+                  setOpen(true);
+                }}
+                className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" /> Create campaign
+              </button>
+            )}
           </div>
         }
       />
+      {/* Search and filter bar */}
+      <div className="mt-4 bg-white border border-slate-200/70 rounded-xl p-4 flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            value={searchInput}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Search campaigns by name"
+            className="w-full h-10 pl-9 pr-3 rounded-lg bg-slate-50 border border-slate-200 text-sm outline-none focus:bg-white focus:border-indigo-400"
+          />
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          className="h-10 px-3 rounded-lg bg-slate-50 border border-slate-200 text-sm outline-none focus:border-indigo-400"
+        >
+          <option value="">All statuses</option>
+          <option value="DRAFT">Draft</option>
+          <option value="SCHEDULED">Scheduled</option>
+          <option value="QUEUED">Queued</option>
+          <option value="RUNNING">Running</option>
+          <option value="COMPLETED">Completed</option>
+          <option value="FAILED">Failed</option>
+        </select>
+        <div className="text-xs text-slate-500">
+          {campaigns.data?.meta.total.toLocaleString() ?? "—"} campaigns
+        </div>
+      </div>
+
       {campaigns.isLoading ? (
         <TableSkeleton rows={5} />
       ) : campaigns.error ? (
@@ -264,7 +326,7 @@ function Campaigns() {
             <div>
               <h2 className="font-semibold">Create campaign</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                {steps[step]} · Step {step + 1} of 5
+                {steps[step]} · Step {step + 1} of 6
               </p>
             </div>
             <button
@@ -383,9 +445,58 @@ function Campaigns() {
               </div>
             )}
             {step === 3 && (
+              <div>
+                <h3 className="font-medium">4. Schedule Campaign</h3>
+                <p className="text-sm text-slate-500 mt-1 mb-5">
+                  Choose when to send this campaign, or launch immediately.
+                </p>
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isScheduled}
+                      onChange={(e) => {
+                        setIsScheduled(e.target.checked);
+                        if (!e.target.checked) setScheduledAt("");
+                      }}
+                      className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                    />
+                    <span className="text-sm font-medium">Schedule for later</span>
+                  </label>
+                  {isScheduled && (
+                    <div className="ml-7">
+                      <label className="block text-sm text-slate-600 mb-1">
+                        Send at
+                      </label>
+                      <div className="relative max-w-xs">
+                        <Calendar className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="datetime-local"
+                          value={scheduledAt}
+                          onChange={(e) => setScheduledAt(e.target.value)}
+                          min={new Date(Date.now() + 5 * 60_000).toISOString().slice(0, 16)}
+                          className="w-full h-10 pl-9 pr-3 rounded-lg border border-slate-200 text-sm outline-none focus:border-indigo-400"
+                        />
+                      </div>
+                      {scheduledAt && new Date(scheduledAt) <= new Date() && (
+                        <p className="mt-1 text-xs text-rose-600">
+                          Scheduled time must be in the future.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {!isScheduled && (
+                    <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-4 text-sm text-indigo-800">
+                      The campaign will be queued for immediate delivery.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {step === 4 && (
               <div className="text-center py-8">
                 <div className="text-xs uppercase tracking-wider text-slate-400">
-                  4. Audience Preview
+                  5. Audience Preview
                 </div>
                 <div className="mt-4 text-5xl font-semibold tracking-tight">
                   {audienceSize?.toLocaleString() ?? "—"}
@@ -399,9 +510,9 @@ function Campaigns() {
                 </div>
               </div>
             )}
-            {step === 4 && (
+            {step === 5 && (
               <div>
-                <h3 className="font-medium">5. Launch Campaign</h3>
+                <h3 className="font-medium">6. Launch Campaign</h3>
                 <p className="text-sm text-slate-500 mt-1 mb-5">
                   Confirm the campaign before queueing delivery jobs.
                 </p>
@@ -417,6 +528,12 @@ function Campaigns() {
                       "Subject",
                       channel === "EMAIL" ? subject : "Not applicable",
                     ],
+                    [
+                      "Schedule",
+                      isScheduled && scheduledAt
+                        ? new Date(scheduledAt).toLocaleString()
+                        : "Immediate",
+                    ],
                   ].map(([label, value]) => (
                     <div
                       key={label}
@@ -427,6 +544,22 @@ function Campaigns() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+            {step === 5 && (
+              <div className="mt-4 rounded-xl bg-rose-50 border border-rose-100 p-4">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={confirmLaunch}
+                    onChange={(e) => setConfirmLaunch(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="text-sm text-rose-800">
+                    I confirm this campaign is ready to launch. This will send messages to{" "}
+                    <strong>{audienceSize?.toLocaleString() ?? 0}</strong> customers.
+                  </span>
+                </label>
               </div>
             )}
             {prepare.error && (
@@ -448,19 +581,20 @@ function Campaigns() {
             >
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
-            {step < 4 ? (
+            {step < 5 ? (
               <button
                 onClick={continueWizard}
                 disabled={
                   prepare.isPending ||
                   (step === 0 && !segmentId) ||
-                  (step === 2 && (!name.trim() || !message.trim()))
+                  (step === 2 && (!name.trim() || !message.trim())) ||
+                  (step === 3 && isScheduled && (!scheduledAt || new Date(scheduledAt) <= new Date()))
                 }
                 className="h-9 px-4 rounded-lg bg-slate-950 text-white text-sm flex items-center gap-2 disabled:opacity-40"
               >
                 {prepare.isPending
                   ? "Preparing..."
-                  : step === 2
+                  : step === 3
                     ? "Preview audience"
                     : "Continue"}
                 <ArrowRight className="h-4 w-4" />
@@ -468,7 +602,7 @@ function Campaigns() {
             ) : (
               <button
                 onClick={() => launch.mutate()}
-                disabled={launch.isPending}
+                disabled={launch.isPending || !confirmLaunch}
                 className="h-10 px-5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium flex items-center gap-2 disabled:opacity-50"
               >
                 <Check className="h-4 w-4" />{" "}
@@ -489,6 +623,7 @@ function Campaigns() {
 function Status({ value }: { value: string }) {
   const styles: Record<string, string> = {
     DRAFT: "bg-slate-100 text-slate-600",
+    SCHEDULED: "bg-violet-100 text-violet-700",
     QUEUED: "bg-amber-100 text-amber-700",
     RUNNING: "bg-blue-100 text-blue-700",
     COMPLETED: "bg-emerald-100 text-emerald-700",

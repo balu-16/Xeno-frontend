@@ -22,6 +22,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -352,6 +353,13 @@ function Dashboard() {
                 content={
                   <ChartTooltip formatter={(v) => `${Number(v).toFixed(1)}%`} />
                 }
+              />
+              <Legend
+                verticalAlign="bottom"
+                height={36}
+                formatter={(value: string) => (
+                  <span className="text-xs text-slate-600">{value}</span>
+                )}
               />
             </PieChart>
           </ResponsiveContainer>

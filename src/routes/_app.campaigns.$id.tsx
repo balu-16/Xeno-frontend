@@ -30,12 +30,16 @@ function CampaignDetails() {
       withCredentials: true,
     });
     stream.onmessage = (event) => {
-      const payload = JSON.parse(event.data) as { campaignId?: string };
-      if (payload.campaignId === id) {
-        void queryClient.invalidateQueries({ queryKey: ["campaign", id] });
-        void queryClient.invalidateQueries({
-          queryKey: ["campaign-performance", id],
-        });
+      try {
+        const payload = JSON.parse(event.data) as { campaignId?: string };
+        if (payload.campaignId === id) {
+          void queryClient.invalidateQueries({ queryKey: ["campaign", id] });
+          void queryClient.invalidateQueries({
+            queryKey: ["campaign-performance", id],
+          });
+        }
+      } catch {
+        // Ignore malformed SSE events (e.g., during deployment)
       }
     };
     return () => stream.close();

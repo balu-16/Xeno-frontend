@@ -36,6 +36,14 @@ function Segments() {
   const [name, setName] = useState("AI Generated Segment");
   const [rules, setRules] = useState<SegmentRuleGroup>(defaultRules);
   const [audienceSize, setAudienceSize] = useState<number>();
+  const auth = useQuery({
+    queryKey: ["auth", "me"],
+    queryFn: api.me,
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
+  const role = auth.data?.user?.role;
+  const canManage = role === "ADMIN" || role === "MANAGER";
   const query = useQuery({
     queryKey: ["segments"],
     queryFn: () => api.segments(),
@@ -83,14 +91,14 @@ function Segments() {
       <PageHeader
         title="Segments"
         subtitle="Build secure audiences manually or from natural language."
-        action={
+        action={canManage ? (
           <button
             onClick={() => setOpen(true)}
             className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2"
           >
             <Sparkles className="h-4 w-4" /> Generate segment
           </button>
-        }
+        ) : null}
       />
       {query.isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -146,6 +154,7 @@ function Segments() {
               <div className="mt-4 rounded-lg bg-slate-50 p-3 font-mono text-[11px] text-slate-600 line-clamp-3">
                 {JSON.stringify(segment.rules)}
               </div>
+              {canManage && (
               <button
                 onClick={() =>
                   void navigate({
@@ -157,6 +166,7 @@ function Segments() {
               >
                 Launch campaign
               </button>
+              )}
             </div>
           ))}
         </div>
@@ -257,7 +267,7 @@ function Segments() {
           </div>
           <button
             onClick={() => create.mutate()}
-            disabled={create.isPending || !name.trim()}
+            disabled={!canManage || create.isPending || !name.trim()}
             className="w-full h-11 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />{" "}

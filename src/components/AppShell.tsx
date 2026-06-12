@@ -20,12 +20,12 @@ import {
 } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { api, ApiError } from "@/lib/api";
+import { api, ApiError, type User } from "@/lib/api";
 import { AIPanel } from "./AIPanel";
 import { CommandPalette, CommandPaletteButton } from "./CommandPalette";
 import { NotificationCenter } from "./NotificationCenter";
 
-const navigation = [
+const allNavigation = [
   { to: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { to: "/customers", label: "Customers", icon: Users },
   { to: "/segments", label: "Segments", icon: Target },
@@ -33,6 +33,16 @@ const navigation = [
   { to: "/analytics", label: "Analytics", icon: TrendingUp },
   { to: "/ai", label: "AI History", icon: Bot },
 ] as const;
+
+function getNavigation(_role: User["role"]) {
+  return allNavigation;
+}
+
+const roleBadgeStyles: Record<User["role"], string> = {
+  ADMIN: "bg-rose-100 text-rose-700",
+  MANAGER: "bg-amber-100 text-amber-700",
+  MEMBER: "bg-slate-100 text-slate-600",
+};
 
 export function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
@@ -46,8 +56,7 @@ export function AppShell() {
     queryKey: ["auth", "me"],
     queryFn: api.me,
     retry: false,
-    staleTime: 0,
-    gcTime: 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes — auth status rarely changes mid-session
   });
   const logout = useMutation({
     mutationFn: api.logout,
@@ -57,7 +66,6 @@ export function AppShell() {
       await navigate({ to: "/auth", replace: true });
     },
   });
-
   // Redirect to /auth on any auth error (401, network, etc.)
   useEffect(() => {
     if (auth.error instanceof ApiError && auth.error.status === 401) {
@@ -109,7 +117,7 @@ export function AppShell() {
   }
 
   if (auth.error || !auth.data) {
-    void navigate({ to: "/auth", replace: true });
+    // Redirect is handled by the useEffect above — just show loading state
     return (
       <div className="min-h-screen grid place-items-center bg-slate-50">
         <div className="flex items-center gap-3 text-sm text-slate-500">
@@ -120,6 +128,9 @@ export function AppShell() {
     );
   }
 
+  const userRole = auth.data.user.role;
+  const navigation = getNavigation(userRole);
+
   return (
     <div className="h-screen w-screen flex bg-slate-50/60 text-slate-900 overflow-hidden">
       <CommandPalette />
@@ -127,6 +138,7 @@ export function AppShell() {
       {/* Mobile hamburger */}
       <button
         onClick={() => setMobileOpen(true)}
+        aria-label="Open navigation menu"
         className="fixed top-3 left-3 z-40 md:hidden h-9 w-9 rounded-lg bg-white border border-slate-200 shadow-sm grid place-items-center text-slate-500"
       >
         <Menu className="h-4 w-4" />
@@ -172,6 +184,9 @@ export function AppShell() {
             </div>
           )}
         </div>
+        <div className="px-3 py-2 border-b border-slate-100">
+          <CommandPaletteButton />
+        </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           {!collapsed && (
             <div className="px-2 text-[10px] font-medium uppercase tracking-wider text-slate-400 mb-2">
@@ -214,9 +229,6 @@ export function AppShell() {
             })}
           </ul>
         </nav>
-        <div className="px-3 py-2">
-          <CommandPaletteButton />
-        </div>
         <div className={`border-t border-slate-100 ${collapsed ? "p-2" : "p-3"}`}>
           <div
             className={`flex items-center ${collapsed ? "flex-col gap-2" : "gap-3 p-2"}`}
@@ -231,8 +243,15 @@ export function AppShell() {
                     .join("")}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">
-                    {auth.data.user.name}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">
+                      {auth.data.user.name}
+                    </span>
+                    <span
+                      className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full shrink-0 ${roleBadgeStyles[userRole]}`}
+                    >
+                      {userRole}
+                    </span>
                   </div>
                   <div className="text-xs text-slate-500 truncate">
                     {auth.data.user.email}
@@ -253,6 +272,7 @@ export function AppShell() {
         </div>
         <button
           onClick={() => setCollapsed((c) => !c)}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className="absolute bottom-4 -right-3 z-10 h-6 w-6 rounded-full bg-white border border-slate-200 shadow-sm grid place-items-center text-slate-400 hover:text-slate-600 hover:shadow-md transition-all"
           style={{ left: collapsed ? "52px" : "228px" }}
         >

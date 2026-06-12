@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,6 +21,11 @@ import { Route as AppAnalyticsRouteImport } from './routes/_app.analytics'
 import { Route as AppAiRouteImport } from './routes/_app.ai'
 import { Route as AppCampaignsIdRouteImport } from './routes/_app.campaigns.$id'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -73,6 +79,7 @@ const AppCampaignsIdRoute = AppCampaignsIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/ai': typeof AppAiRoute
   '/analytics': typeof AppAnalyticsRoute
   '/campaigns': typeof AppCampaignsRouteWithChildren
@@ -84,6 +91,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/ai': typeof AppAiRoute
   '/analytics': typeof AppAnalyticsRoute
   '/campaigns': typeof AppCampaignsRouteWithChildren
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/auth': typeof AuthRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/_app/ai': typeof AppAiRoute
   '/_app/analytics': typeof AppAnalyticsRoute
   '/_app/campaigns': typeof AppCampaignsRouteWithChildren
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/verify-email'
     | '/ai'
     | '/analytics'
     | '/campaigns'
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/verify-email'
     | '/ai'
     | '/analytics'
     | '/campaigns'
@@ -133,6 +144,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/auth'
+    | '/verify-email'
     | '/_app/ai'
     | '/_app/analytics'
     | '/_app/campaigns'
@@ -146,10 +158,18 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AuthRoute: typeof AuthRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -259,6 +279,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AuthRoute: AuthRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

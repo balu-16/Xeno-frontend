@@ -154,7 +154,7 @@ function AIHistory() {
           </button>
         }
       />
-      <div className="h-[calc(100vh-170px)] min-h-[600px] grid grid-cols-[320px_1fr] bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="h-[calc(100vh-170px)] min-h-[600px] grid grid-cols-1 md:grid-cols-[320px_1fr] bg-white border border-slate-200 rounded-xl overflow-hidden">
         <aside className="border-r border-slate-100 overflow-y-auto">
           <div className="p-4 text-xs uppercase tracking-wider text-slate-400">
             Previous conversations

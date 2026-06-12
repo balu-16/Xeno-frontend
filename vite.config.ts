@@ -7,7 +7,9 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
-  nitro: { preset: "vercel" },
+  nitro: {
+    preset: process.env.DOCKER ? "node" : "vercel",
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
@@ -17,6 +19,12 @@ export default defineConfig({
     server: {
       port: 5173,
       strictPort: false,
+      host: process.env.DOCKER ? "0.0.0.0" : undefined,
+    },
+    preview: {
+      port: 5173,
+      strictPort: true,
+      host: "0.0.0.0",
     },
   },
 });

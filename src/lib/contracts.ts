@@ -248,7 +248,9 @@ export const aiToolNameSchema = z.enum([
   "diagnoseCampaignFailure",
   "listSegments",
   "listCampaigns",
-  "getCustomerStats"
+  "getCustomerStats",
+  "getBestSendTime",
+  "suggestABTest"
 ]);
 export type AIToolName = z.infer<typeof aiToolNameSchema>;
 
