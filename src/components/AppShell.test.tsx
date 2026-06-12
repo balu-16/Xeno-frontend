@@ -124,7 +124,7 @@ describe("AppShell", () => {
           name: "Test User",
           email: "test@test.com",
           role,
-          },
+        },
       });
       renderWithProviders(<AppShell />);
       await waitFor(() => {

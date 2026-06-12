@@ -102,9 +102,7 @@ describe("segmentRuleGroupSchema", () => {
         { field: "city", operator: "contains", value: "York" },
         {
           operator: "AND",
-          conditions: [
-            { field: "totalSpent", operator: ">", value: 1000 },
-          ],
+          conditions: [{ field: "totalSpent", operator: ">", value: 1000 }],
         },
       ],
     });

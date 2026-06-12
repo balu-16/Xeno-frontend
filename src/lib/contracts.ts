@@ -8,7 +8,7 @@ export const campaignStatusSchema = z.enum([
   "QUEUED",
   "RUNNING",
   "COMPLETED",
-  "FAILED"
+  "FAILED",
 ]);
 export type CampaignStatus = z.infer<typeof campaignStatusSchema>;
 
@@ -21,7 +21,7 @@ export const campaignEventTypeSchema = z.enum([
   "MessageOpened",
   "MessageClicked",
   "MessageConverted",
-  "MessageFailed"
+  "MessageFailed",
 ]);
 export type CampaignEventType = z.infer<typeof campaignEventTypeSchema>;
 
@@ -32,7 +32,7 @@ export const deliveryStatusSchema = z.enum([
   "OPENED",
   "CLICKED",
   "CONVERTED",
-  "FAILED"
+  "FAILED",
 ]);
 export type DeliveryStatus = z.infer<typeof deliveryStatusSchema>;
 
@@ -41,7 +41,7 @@ export const segmentFieldSchema = z.enum([
   "orderCount",
   "daysSinceLastOrder",
   "city",
-  "emailEngagement"
+  "emailEngagement",
 ]);
 export type SegmentField = z.infer<typeof segmentFieldSchema>;
 
@@ -52,7 +52,7 @@ export const segmentOperatorSchema = z.enum([
   "<=",
   "=",
   "!=",
-  "contains"
+  "contains",
 ]);
 export type SegmentOperator = z.infer<typeof segmentOperatorSchema>;
 
@@ -60,7 +60,7 @@ export const segmentConditionSchema = z
   .object({
     field: segmentFieldSchema,
     operator: segmentOperatorSchema,
-    value: z.union([z.string().max(200), z.number().finite()])
+    value: z.union([z.string().max(200), z.number().finite()]),
   })
   .strict()
   .superRefine((condition, context) => {
@@ -68,27 +68,30 @@ export const segmentConditionSchema = z
       "totalSpent",
       "orderCount",
       "daysSinceLastOrder",
-      "emailEngagement"
+      "emailEngagement",
     ];
-    if (numericFields.includes(condition.field) && typeof condition.value !== "number") {
+    if (
+      numericFields.includes(condition.field) &&
+      typeof condition.value !== "number"
+    ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         message: `${condition.field} requires a numeric value`,
-        path: ["value"]
+        path: ["value"],
       });
     }
     if (condition.field === "city" && typeof condition.value !== "string") {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         message: "city requires a string value",
-        path: ["value"]
+        path: ["value"],
       });
     }
     if (condition.operator === "contains" && condition.field !== "city") {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         message: "contains is only supported for city",
-        path: ["operator"]
+        path: ["operator"],
       });
     }
   });
@@ -106,9 +109,9 @@ const segmentRuleGroupBaseSchema: z.ZodType<SegmentRuleGroup> = z.lazy(() =>
       conditions: z
         .array(z.union([segmentConditionSchema, segmentRuleGroupBaseSchema]))
         .min(1)
-        .max(12)
+        .max(12),
     })
-    .strict()
+    .strict(),
 );
 
 function ruleDepth(group: SegmentRuleGroup): number {
@@ -117,8 +120,8 @@ function ruleDepth(group: SegmentRuleGroup): number {
     Math.max(
       0,
       ...group.conditions.map((condition) =>
-        "conditions" in condition ? ruleDepth(condition) : 0
-      )
+        "conditions" in condition ? ruleDepth(condition) : 0,
+      ),
     )
   );
 }
@@ -128,17 +131,17 @@ export const segmentRuleGroupSchema = segmentRuleGroupBaseSchema.superRefine(
     if (ruleDepth(group) > 3) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
-        message: "Segment rules may be nested at most three levels"
+        message: "Segment rules may be nested at most three levels",
       });
     }
-  }
+  },
 );
 
 export const paginationQuerySchema = z.object({
   cursor: z.string().optional(),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
-  search: z.string().trim().max(120).optional()
+  search: z.string().trim().max(120).optional(),
 });
 export type PaginationQuery = z.infer<typeof paginationQuerySchema>;
 
@@ -149,7 +152,7 @@ export const campaignDispatchJobSchema = z.object({
   destination: z.string().min(1),
   subject: z.string().max(200).nullable(),
   message: z.string().min(1).max(5000),
-  correlationId: z.string().uuid()
+  correlationId: z.string().uuid(),
 });
 export type CampaignDispatchJob = z.infer<typeof campaignDispatchJobSchema>;
 
@@ -161,13 +164,13 @@ export const receiptJobSchema = z.object({
   campaignId: z.string().uuid(),
   customerId: z.string().uuid(),
   correlationId: z.string().uuid(),
-  payload: z.record(z.unknown()).default({})
+  payload: z.record(z.unknown()).default({}),
 });
 export type ReceiptJob = z.infer<typeof receiptJobSchema>;
 
 export const analyticsRefreshJobSchema = z.object({
   campaignId: z.string().uuid(),
-  correlationId: z.string().uuid()
+  correlationId: z.string().uuid(),
 });
 export type AnalyticsRefreshJob = z.infer<typeof analyticsRefreshJobSchema>;
 
@@ -250,12 +253,12 @@ export const aiToolNameSchema = z.enum([
   "listCampaigns",
   "getCustomerStats",
   "getBestSendTime",
-  "suggestABTest"
+  "suggestABTest",
 ]);
 export type AIToolName = z.infer<typeof aiToolNameSchema>;
 
 export const queueNames = {
   campaignDispatch: "campaign-dispatch",
   receiptProcessing: "receipt-processing",
-  analyticsRefresh: "analytics-refresh"
+  analyticsRefresh: "analytics-refresh",
 } as const;

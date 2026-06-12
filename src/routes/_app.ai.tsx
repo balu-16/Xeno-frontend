@@ -1,21 +1,74 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Bot, MessageSquarePlus, Send, Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import {
+  Bot,
+  MessageSquarePlus,
+  MoreHorizontal,
+  Pencil,
+  Send,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
 import { ErrorState, LoadingState } from "@/components/QueryState";
 import { type AIMessage, type Conversation, api } from "@/lib/api";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/ai")({
   head: () => ({ meta: [{ title: "AI Conversations · Xeno Mini" }] }),
   component: AIHistory,
 });
 
+const AI_SKILLS = [
+  {
+    category: "Campaigns",
+    icon: "📧",
+    suggestions: [
+      "Show me all campaigns",
+      "Create a campaign called Summer Sale targeting High Value Customers",
+      "Why did my last campaign fail?",
+    ],
+  },
+  {
+    category: "Customers",
+    icon: "👥",
+    suggestions: [
+      "How many customers do we have?",
+      "Find customer by email john@example.com",
+      "Create a customer named Sarah with email sarah@test.com",
+    ],
+  },
+  {
+    category: "Segments",
+    icon: "🎯",
+    suggestions: [
+      "Show me all segments",
+      "Create a segment for customers who spent over $500",
+      "How many customers are in the VIP segment?",
+    ],
+  },
+  {
+    category: "Analytics",
+    icon: "📊",
+    suggestions: [
+      "Show campaign performance analytics",
+      "What is our total revenue this month?",
+      "Show delivery analytics for all campaigns",
+    ],
+  },
+];
+
 function AIHistory() {
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState<string>();
   const [input, setInput] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const conversations = useQuery({
     queryKey: ["ai", "conversations"],
     queryFn: api.conversations,
@@ -36,6 +89,17 @@ function AIHistory() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [conversation.data?.messages]);
 
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const create = useMutation({
     mutationFn: () => api.createConversation(),
     onSuccess: async (result) => {
@@ -45,6 +109,39 @@ function AIHistory() {
       });
     },
   });
+
+  const rename = useMutation({
+    mutationFn: ({ id, title }: { id: string; title: string }) =>
+      api.renameConversation(id, title),
+    onSuccess: async () => {
+      setRenamingId(null);
+      setRenameValue("");
+      await queryClient.invalidateQueries({
+        queryKey: ["ai", "conversations"],
+      });
+      toast.success("Conversation renamed");
+    },
+    onError: (error) => {
+      toast.error(`Failed to rename: ${error.message}`);
+    },
+  });
+
+  const deleteConv = useMutation({
+    mutationFn: (id: string) => api.deleteConversation(id),
+    onSuccess: async (_, deletedId) => {
+      if (selectedId === deletedId) {
+        setSelectedId(undefined);
+      }
+      await queryClient.invalidateQueries({
+        queryKey: ["ai", "conversations"],
+      });
+      toast.success("Conversation deleted");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
   const send = useMutation({
     mutationFn: (content: string) => api.sendAIMessage(selectedId!, content),
     onMutate: async (content) => {
@@ -123,6 +220,23 @@ function AIHistory() {
     },
   });
 
+  const startRename = (id: string, currentTitle: string) => {
+    setRenamingId(id);
+    setRenameValue(currentTitle);
+    setOpenMenuId(null);
+  };
+
+  const handleRenameSubmit = (id: string) => {
+    if (renameValue.trim()) {
+      rename.mutate({ id, title: renameValue.trim() });
+    }
+  };
+
+  const handleDelete = (id: string) => {
+    setOpenMenuId(null);
+    deleteConv.mutate(id);
+  };
+
   if (conversations.isLoading) {
     return (
       <Page>
@@ -160,18 +274,99 @@ function AIHistory() {
             Previous conversations
           </div>
           {conversations.data!.map((item) => (
-            <button
+            <div
               key={item.id}
-              onClick={() => setSelectedId(item.id)}
-              className={`w-full text-left px-4 py-3 border-t border-slate-50 ${
+              className={`relative border-t border-slate-50 ${
                 selectedId === item.id ? "bg-indigo-50" : "hover:bg-slate-50"
               }`}
             >
-              <div className="text-sm font-medium truncate">{item.title}</div>
-              <div className="text-xs text-slate-400 mt-1">
-                {new Date(item.updatedAt).toLocaleString()}
-              </div>
-            </button>
+              {renamingId === item.id ? (
+                <div className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={renameValue}
+                      onChange={(e) => setRenameValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleRenameSubmit(item.id);
+                        if (e.key === "Escape") {
+                          setRenamingId(null);
+                          setRenameValue("");
+                        }
+                      }}
+                      className="flex-1 h-8 px-2 rounded border border-indigo-300 text-sm outline-none focus:border-indigo-500"
+                      autoFocus
+                    />
+                    <button
+                      onClick={() => handleRenameSubmit(item.id)}
+                      className="h-8 px-2 rounded bg-indigo-600 text-white text-xs"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => {
+                        setRenamingId(null);
+                        setRenameValue("");
+                      }}
+                      className="h-8 w-8 rounded grid place-items-center text-slate-400 hover:bg-slate-100"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <button
+                    onClick={() => setSelectedId(item.id)}
+                    className="flex-1 text-left px-4 py-3"
+                  >
+                    <div className="text-sm font-medium truncate">
+                      {item.title}
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      {new Date(item.updatedAt).toLocaleString()}
+                    </div>
+                  </button>
+                  <div
+                    className="relative pr-2"
+                    ref={openMenuId === item.id ? menuRef : undefined}
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenMenuId(openMenuId === item.id ? null : item.id);
+                      }}
+                      className="h-8 w-8 rounded grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </button>
+                    {openMenuId === item.id && (
+                      <div className="absolute right-0 top-9 z-50 w-40 bg-white rounded-lg border border-slate-200 shadow-lg overflow-hidden">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startRename(item.id, item.title);
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                          Rename
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(item.id);
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm text-rose-600 hover:bg-rose-50"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           ))}
         </aside>
         <section className="flex flex-col min-w-0 min-h-0 overflow-hidden">
@@ -223,13 +418,34 @@ function AIHistory() {
                 )}
                 <div ref={messagesEndRef} />
               </div>
+              {conversation.data.messages.length > 0 && (
+                <div className="px-4 pb-2">
+                  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    {AI_SKILLS.flatMap((skill) =>
+                      skill.suggestions.slice(0, 1).map((s) => (
+                        <button
+                          key={s}
+                          onClick={() => setInput(s)}
+                          className="shrink-0 text-[11px] text-slate-500 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-full px-3 py-1 transition-colors truncate max-w-[200px]"
+                        >
+                          {skill.icon} {s}
+                        </button>
+                      )),
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="p-4 border-t border-slate-100">
                 <div className="relative">
                   <input
                     value={input}
                     onChange={(event) => setInput(event.target.value)}
                     onKeyDown={(event) => {
-                      if (event.key === "Enter" && input.trim() && !send.isPending)
+                      if (
+                        event.key === "Enter" &&
+                        input.trim() &&
+                        !send.isPending
+                      )
                         send.mutate(input.trim());
                     }}
                     placeholder='Ask "Why did Summer Sale fail?"'
@@ -238,7 +454,9 @@ function AIHistory() {
                   />
                   <button
                     onClick={() =>
-                      input.trim() && !send.isPending && send.mutate(input.trim())
+                      input.trim() &&
+                      !send.isPending &&
+                      send.mutate(input.trim())
                     }
                     disabled={send.isPending || !input.trim()}
                     className="absolute right-1.5 top-1.5 h-8 w-8 rounded-full bg-indigo-600 text-white grid place-items-center disabled:opacity-50"
@@ -249,8 +467,44 @@ function AIHistory() {
               </div>
             </>
           ) : (
-            <div className="h-full grid place-items-center text-sm text-slate-500">
-              Create a conversation to begin.
+            <div className="h-full overflow-y-auto p-6 flex flex-col items-center justify-center">
+              <div className="w-full max-w-2xl space-y-6">
+                <div className="text-center space-y-2">
+                  <Bot className="h-10 w-10 mx-auto text-indigo-400" />
+                  <h3 className="text-lg font-semibold text-slate-800">
+                    What can I help you with?
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    Ask me anything about your campaigns, customers, segments, or analytics.
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {AI_SKILLS.map((skill) => (
+                    <div
+                      key={skill.category}
+                      className="rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 hover:shadow-sm transition-all"
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-lg">{skill.icon}</span>
+                        <span className="text-sm font-semibold text-slate-700">
+                          {skill.category}
+                        </span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {skill.suggestions.map((suggestion) => (
+                          <button
+                            key={suggestion}
+                            onClick={() => setInput(suggestion)}
+                            className="w-full text-left text-xs text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg px-2.5 py-1.5 transition-colors truncate"
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </section>

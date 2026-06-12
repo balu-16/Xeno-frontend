@@ -5,7 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function downloadCSV(filename: string, rows: Array<Record<string, unknown>>) {
+export function downloadCSV(
+  filename: string,
+  rows: Array<Record<string, unknown>>,
+) {
   if (rows.length === 0) return;
   const headers = Object.keys(rows[0]);
   const csv = [

@@ -24,6 +24,7 @@ import { api, ApiError, type User } from "@/lib/api";
 import { AIPanel } from "./AIPanel";
 import { CommandPalette, CommandPaletteButton } from "./CommandPalette";
 import { NotificationCenter } from "./NotificationCenter";
+import { PageActions } from "./PageActions";
 
 const allNavigation = [
   { to: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -91,7 +92,11 @@ export function AppShell() {
   // Global keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
+        return;
       if (e.key === "n" && !e.metaKey && !e.ctrlKey) {
         e.preventDefault();
         void navigate({ to: "/campaigns", search: { segmentId: undefined } });
@@ -108,9 +113,7 @@ export function AppShell() {
           <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center animate-pulse">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
-          <span className="text-sm text-slate-500">
-            Loading Xeno workspace
-          </span>
+          <span className="text-sm text-slate-500">Loading Xeno workspace</span>
         </div>
       </div>
     );
@@ -184,8 +187,10 @@ export function AppShell() {
             </div>
           )}
         </div>
-        <div className="px-3 py-2 border-b border-slate-100">
-          <CommandPaletteButton />
+        <div
+          className={`border-b border-slate-100 ${collapsed ? "px-2 py-2" : "px-3 py-2"}`}
+        >
+          <CommandPaletteButton collapsed={collapsed} />
         </div>
         <nav className="flex-1 overflow-y-auto px-3 py-4">
           {!collapsed && (
@@ -205,9 +210,7 @@ export function AppShell() {
                     to={to}
                     title={collapsed ? label : undefined}
                     className={`relative flex items-center gap-3 rounded-lg text-sm transition-all duration-200 ${
-                      collapsed
-                        ? "justify-center h-10 w-full"
-                        : "px-3 py-2"
+                      collapsed ? "justify-center h-10 w-full" : "px-3 py-2"
                     } ${
                       active
                         ? "bg-indigo-50 text-indigo-700 font-semibold"
@@ -229,7 +232,9 @@ export function AppShell() {
             })}
           </ul>
         </nav>
-        <div className={`border-t border-slate-100 ${collapsed ? "p-2" : "p-3"}`}>
+        <div
+          className={`border-t border-slate-100 ${collapsed ? "p-2" : "p-3"}`}
+        >
           <div
             className={`flex items-center ${collapsed ? "flex-col gap-2" : "gap-3 p-2"}`}
           >
@@ -284,10 +289,13 @@ export function AppShell() {
         </button>
       </aside>
 
-      <main className="flex-1 overflow-y-auto relative">
-        <div className="animate-in fade-in slide-in-from-right-2 duration-300">
-          <Outlet />
+      <main className="flex-1 min-h-0 relative overflow-hidden">
+        <div className="h-full overflow-y-auto">
+          <div className="animate-in fade-in slide-in-from-right-2 duration-300">
+            <Outlet />
+          </div>
         </div>
+        <PageActions />
         <AIPanel />
       </main>
     </div>

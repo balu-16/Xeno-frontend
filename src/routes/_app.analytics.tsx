@@ -115,7 +115,11 @@ function Analytics() {
           ["Click Rate", dashboard.clickRate],
           ["Conversion Rate", dashboard.conversionRate],
         ].map(([label, value]) => (
-          <AnalyticsStatCard key={String(label)} label={String(label)} value={Number(value)} />
+          <AnalyticsStatCard
+            key={String(label)}
+            label={String(label)}
+            value={Number(value)}
+          />
         ))}
       </div>
       <FunnelChart funnel={funnel} />
@@ -139,7 +143,9 @@ function Analytics() {
                   <th className="px-5 py-3 font-medium text-right">Delivery</th>
                   <th className="px-5 py-3 font-medium text-right">Open</th>
                   <th className="px-5 py-3 font-medium text-right">Click</th>
-                  <th className="px-5 py-3 font-medium text-right">Conversion</th>
+                  <th className="px-5 py-3 font-medium text-right">
+                    Conversion
+                  </th>
                   <th className="px-5 py-3 font-medium text-right">Revenue</th>
                 </tr>
               </thead>
@@ -186,7 +192,11 @@ function Analytics() {
   );
 }
 
-function FunnelChart({ funnel }: { funnel: { stage: string; value: number }[] }) {
+function FunnelChart({
+  funnel,
+}: {
+  funnel: { stage: string; value: number }[];
+}) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   return (
@@ -235,7 +245,9 @@ function FunnelChart({ funnel }: { funnel: { stage: string; value: number }[] })
                 <Cell
                   key={index}
                   fill={activeIndex === index ? "#3730a3" : "#4f46e5"}
-                  fillOpacity={activeIndex === null || activeIndex === index ? 1 : 0.4}
+                  fillOpacity={
+                    activeIndex === null || activeIndex === index ? 1 : 0.4
+                  }
                 />
               ))}
             </Bar>

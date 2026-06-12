@@ -45,14 +45,23 @@ const channels: Array<{
   { value: "RCS", label: "RCS", icon: Radio },
 ];
 
-const steps = ["Segment", "Channel", "Message", "Schedule", "Audience", "Launch"];
+const steps = [
+  "Segment",
+  "Channel",
+  "Message",
+  "Schedule",
+  "Audience",
+  "Launch",
+];
 
 function Campaigns() {
   const search = Route.useSearch();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(Boolean(search.segmentId));
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
+    null,
+  );
   const [step, setStep] = useState(0);
   const [segmentId, setSegmentId] = useState(search.segmentId ?? "");
   const [channel, setChannel] = useState<Channel>("EMAIL");
@@ -104,7 +113,10 @@ function Campaigns() {
         channel,
         subject: channel === "EMAIL" ? subject : undefined,
         message,
-        scheduledAt: isScheduled && scheduledAt ? new Date(scheduledAt).toISOString() : undefined,
+        scheduledAt:
+          isScheduled && scheduledAt
+            ? new Date(scheduledAt).toISOString()
+            : undefined,
       });
       const preview = await api.previewCampaign(campaign.id);
       return { campaign, preview };
@@ -149,13 +161,6 @@ function Campaigns() {
     },
   });
 
-  useEffect(() => {
-    if (search.segmentId) {
-      setSegmentId(search.segmentId);
-      setOpen(true);
-    }
-  }, [search.segmentId]);
-
   const reset = () => {
     setStep(0);
     setDraftId(undefined);
@@ -169,6 +174,23 @@ function Campaigns() {
       "Hi {{first_name}}, we selected something special for you. Explore it today.",
     );
   };
+
+  useEffect(() => {
+    if (search.segmentId) {
+      setSegmentId(search.segmentId);
+      setOpen(true);
+    }
+  }, [search.segmentId]);
+
+  // Listen for custom event from PageActions component
+  useEffect(() => {
+    const handler = () => {
+      reset();
+      setOpen(true);
+    };
+    window.addEventListener("open-campaign-creator", handler);
+    return () => window.removeEventListener("open-campaign-creator", handler);
+  }, []);
 
   const continueWizard = () => {
     if (step === 3) {
@@ -233,13 +255,13 @@ function Campaigns() {
             value={searchInput}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search campaigns by name"
-            className="w-full h-10 pl-9 pr-3 rounded-lg bg-slate-50 border border-slate-200 text-sm outline-none focus:bg-white focus:border-indigo-400"
+            className="w-full h-10 pl-9 pr-3 rounded-lg bg-slate-50 border border-slate-200 text-sm outline-none focus:bg-white focus:border-indigo-400 cursor-text"
           />
         </div>
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value)}
-          className="h-10 px-3 rounded-lg bg-slate-50 border border-slate-200 text-sm outline-none focus:border-indigo-400"
+          className="h-10 px-3 rounded-lg bg-slate-50 border border-slate-200 text-sm outline-none focus:border-indigo-400 cursor-pointer appearance-auto"
         >
           <option value="">All statuses</option>
           <option value="DRAFT">Draft</option>
@@ -266,9 +288,22 @@ function Campaigns() {
           title="No campaigns yet"
           description="Create a campaign from a saved segment."
           illustration="campaigns"
+          action={
+            !isMember ? (
+              <button
+                onClick={() => {
+                  reset();
+                  setOpen(true);
+                }}
+                className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2 mx-auto"
+              >
+                <Plus className="h-4 w-4" /> Create campaign
+              </button>
+            ) : null
+          }
         />
       ) : (
-        <div className="bg-white border border-slate-200/70 rounded-xl overflow-hidden">
+        <div className="bg-white border border-slate-200/70 rounded-xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs uppercase tracking-wider text-slate-500 border-b border-slate-100">
@@ -319,9 +354,11 @@ function Campaigns() {
         className={`fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       />
       <div
-        className={`fixed inset-0 z-50 grid place-items-center px-4 pointer-events-none transition-all ${open ? "opacity-100" : "opacity-0"}`}
+        className={`fixed inset-0 z-50 grid place-items-center px-4 pointer-events-none transition-all ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       >
-        <div className="pointer-events-auto bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-slate-100">
+        <div
+          className={`${open ? "pointer-events-auto" : "pointer-events-none"} bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-slate-100`}
+        >
           <div className="p-6 border-b border-slate-100 flex items-center justify-between">
             <div>
               <h2 className="font-semibold">Create campaign</h2>
@@ -461,7 +498,9 @@ function Campaigns() {
                       }}
                       className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span className="text-sm font-medium">Schedule for later</span>
+                    <span className="text-sm font-medium">
+                      Schedule for later
+                    </span>
                   </label>
                   {isScheduled && (
                     <div className="ml-7">
@@ -474,7 +513,9 @@ function Campaigns() {
                           type="datetime-local"
                           value={scheduledAt}
                           onChange={(e) => setScheduledAt(e.target.value)}
-                          min={new Date(Date.now() + 5 * 60_000).toISOString().slice(0, 16)}
+                          min={new Date(Date.now() + 5 * 60_000)
+                            .toISOString()
+                            .slice(0, 16)}
                           className="w-full h-10 pl-9 pr-3 rounded-lg border border-slate-200 text-sm outline-none focus:border-indigo-400"
                         />
                       </div>
@@ -556,8 +597,10 @@ function Campaigns() {
                     className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                   />
                   <span className="text-sm text-rose-800">
-                    I confirm this campaign is ready to launch. This will send messages to{" "}
-                    <strong>{audienceSize?.toLocaleString() ?? 0}</strong> customers.
+                    I confirm this campaign is ready to launch. This will send
+                    messages to{" "}
+                    <strong>{audienceSize?.toLocaleString() ?? 0}</strong>{" "}
+                    customers.
                   </span>
                 </label>
               </div>
@@ -588,7 +631,9 @@ function Campaigns() {
                   prepare.isPending ||
                   (step === 0 && !segmentId) ||
                   (step === 2 && (!name.trim() || !message.trim())) ||
-                  (step === 3 && isScheduled && (!scheduledAt || new Date(scheduledAt) <= new Date()))
+                  (step === 3 &&
+                    isScheduled &&
+                    (!scheduledAt || new Date(scheduledAt) <= new Date()))
                 }
                 className="h-9 px-4 rounded-lg bg-slate-950 text-white text-sm flex items-center gap-2 disabled:opacity-40"
               >

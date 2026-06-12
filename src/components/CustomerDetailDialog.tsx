@@ -46,22 +46,66 @@ type Communication = {
   events: CommunicationEvent[];
 };
 
-const EVENT_CONFIG: Record<string, { icon: typeof Send; color: string; bg: string; label: string }> = {
-  sent: { icon: Send, color: "text-blue-600", bg: "bg-blue-100", label: "Sent" },
-  delivered: { icon: CheckCheck, color: "text-emerald-600", bg: "bg-emerald-100", label: "Delivered" },
-  opened: { icon: Eye, color: "text-emerald-600", bg: "bg-emerald-100", label: "Opened" },
-  clicked: { icon: MousePointerClick, color: "text-emerald-600", bg: "bg-emerald-100", label: "Clicked" },
-  converted: { icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-100", label: "Converted" },
-  failed: { icon: XCircle, color: "text-rose-600", bg: "bg-rose-100", label: "Failed" },
+const EVENT_CONFIG: Record<
+  string,
+  { icon: typeof Send; color: string; bg: string; label: string }
+> = {
+  sent: {
+    icon: Send,
+    color: "text-blue-600",
+    bg: "bg-blue-100",
+    label: "Sent",
+  },
+  delivered: {
+    icon: CheckCheck,
+    color: "text-emerald-600",
+    bg: "bg-emerald-100",
+    label: "Delivered",
+  },
+  opened: {
+    icon: Eye,
+    color: "text-emerald-600",
+    bg: "bg-emerald-100",
+    label: "Opened",
+  },
+  clicked: {
+    icon: MousePointerClick,
+    color: "text-emerald-600",
+    bg: "bg-emerald-100",
+    label: "Clicked",
+  },
+  converted: {
+    icon: CheckCircle,
+    color: "text-emerald-600",
+    bg: "bg-emerald-100",
+    label: "Converted",
+  },
+  failed: {
+    icon: XCircle,
+    color: "text-rose-600",
+    bg: "bg-rose-100",
+    label: "Failed",
+  },
 };
 
 function getEventConfig(type: string) {
   const key = type.replace("Message", "").toLowerCase();
-  return EVENT_CONFIG[key] ?? { icon: Send, color: "text-slate-500", bg: "bg-slate-100", label: type };
+  return (
+    EVENT_CONFIG[key] ?? {
+      icon: Send,
+      color: "text-slate-500",
+      bg: "bg-slate-100",
+      label: type,
+    }
+  );
 }
 
 function flattenCommunications(comms: Communication[]) {
-  const events: Array<{ campaignName: string; type: string; occurredAt: string }> = [];
+  const events: Array<{
+    campaignName: string;
+    type: string;
+    occurredAt: string;
+  }> = [];
   for (const comm of comms) {
     for (const event of comm.events) {
       events.push({
@@ -71,11 +115,17 @@ function flattenCommunications(comms: Communication[]) {
       });
     }
   }
-  events.sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime());
+  events.sort(
+    (a, b) =>
+      new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime(),
+  );
   return events;
 }
 
-export function CustomerDetailDialog({ customerId, onClose }: CustomerDetailDialogProps) {
+export function CustomerDetailDialog({
+  customerId,
+  onClose,
+}: CustomerDetailDialogProps) {
   const customer = useQuery({
     queryKey: ["customer-detail", customerId],
     queryFn: () => api.customer(customerId!),
@@ -99,12 +149,18 @@ export function CustomerDetailDialog({ customerId, onClose }: CustomerDetailDial
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Customer Details</DialogTitle>
-          <DialogDescription>View customer profile, order history, and campaign activity.</DialogDescription>
+          <DialogDescription>
+            View customer profile, order history, and campaign activity.
+          </DialogDescription>
         </DialogHeader>
         {customer.isLoading ? (
-          <div className="py-12 text-center text-sm text-slate-500">Loading...</div>
+          <div className="py-12 text-center text-sm text-slate-500">
+            Loading...
+          </div>
         ) : customer.error ? (
-          <div className="py-12 text-center text-sm text-rose-600">Failed to load customer</div>
+          <div className="py-12 text-center text-sm text-rose-600">
+            Failed to load customer
+          </div>
         ) : customer.data ? (
           <Tabs defaultValue="profile" className="w-full">
             <TabsList className="w-full justify-start">
@@ -124,9 +180,15 @@ export function CustomerDetailDialog({ customerId, onClose }: CustomerDetailDial
                     .join("")}
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold">{customer.data.name}</h3>
-                  <p className="text-sm text-slate-500">{customer.data.email}</p>
-                  <p className="text-xs text-slate-400">{customer.data.phone}</p>
+                  <h3 className="text-xl font-semibold">
+                    {customer.data.name}
+                  </h3>
+                  <p className="text-sm text-slate-500">
+                    {customer.data.email}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {customer.data.phone}
+                  </p>
                 </div>
               </div>
 
@@ -158,7 +220,10 @@ export function CustomerDetailDialog({ customerId, onClose }: CustomerDetailDial
                     City
                   </div>
                   <div className="mt-1 font-semibold text-sm">
-                    {String((customer.data.metadata as Record<string, unknown>).city ?? "Unknown")}
+                    {String(
+                      (customer.data.metadata as Record<string, unknown>)
+                        .city ?? "Unknown",
+                    )}
                   </div>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-3">
@@ -166,7 +231,9 @@ export function CustomerDetailDialog({ customerId, onClose }: CustomerDetailDial
                     <ShoppingBag className="h-3.5 w-3.5" />
                     Orders
                   </div>
-                  <div className="mt-1 font-semibold text-sm">{customer.data.orders.length}</div>
+                  <div className="mt-1 font-semibold text-sm">
+                    {customer.data.orders.length}
+                  </div>
                 </div>
                 <div className="bg-slate-50 rounded-lg p-3">
                   <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -183,7 +250,10 @@ export function CustomerDetailDialog({ customerId, onClose }: CustomerDetailDial
                     Preferred
                   </div>
                   <div className="mt-1 font-semibold text-sm capitalize">
-                    {String((customer.data.metadata as Record<string, unknown>).preferredCategory ?? "N/A")}
+                    {String(
+                      (customer.data.metadata as Record<string, unknown>)
+                        .preferredCategory ?? "N/A",
+                    )}
                   </div>
                 </div>
               </div>
@@ -191,21 +261,36 @@ export function CustomerDetailDialog({ customerId, onClose }: CustomerDetailDial
               {/* Recent Orders */}
               {customer.data.orders.length > 0 && (
                 <div>
-                  <div className="text-xs text-slate-500 mb-2">Recent Orders</div>
+                  <div className="text-xs text-slate-500 mb-2">
+                    Recent Orders
+                  </div>
                   <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-xs text-slate-500 border-b border-slate-100">
-                          <th className="text-left px-4 py-2 font-medium">Order ID</th>
-                          <th className="text-right px-4 py-2 font-medium">Amount</th>
-                          <th className="text-right px-4 py-2 font-medium">Date</th>
+                          <th className="text-left px-4 py-2 font-medium">
+                            Order ID
+                          </th>
+                          <th className="text-right px-4 py-2 font-medium">
+                            Amount
+                          </th>
+                          <th className="text-right px-4 py-2 font-medium">
+                            Date
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {customer.data.orders.slice(0, 10).map((order) => (
-                          <tr key={order.id} className="border-b border-slate-50">
-                            <td className="px-4 py-2 font-mono text-xs">{order.id.slice(0, 8)}...</td>
-                            <td className="px-4 py-2 text-right">{currency.format(Number(order.amount))}</td>
+                          <tr
+                            key={order.id}
+                            className="border-b border-slate-50"
+                          >
+                            <td className="px-4 py-2 font-mono text-xs">
+                              {order.id.slice(0, 8)}...
+                            </td>
+                            <td className="px-4 py-2 text-right">
+                              {currency.format(Number(order.amount))}
+                            </td>
                             <td className="px-4 py-2 text-right text-slate-500">
                               {new Date(order.createdAt).toLocaleDateString()}
                             </td>
@@ -220,16 +305,27 @@ export function CustomerDetailDialog({ customerId, onClose }: CustomerDetailDial
               {/* Campaign Activity (quick summary) */}
               {customer.data.campaignEvents.length > 0 && (
                 <div>
-                  <div className="text-xs text-slate-500 mb-2">Campaign Activity</div>
+                  <div className="text-xs text-slate-500 mb-2">
+                    Campaign Activity
+                  </div>
                   <div className="space-y-1.5 max-h-48 overflow-y-auto">
                     {customer.data.campaignEvents.slice(0, 15).map((event) => (
-                      <div key={event.id} className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 text-xs">
+                      <div
+                        key={event.id}
+                        className="flex items-center justify-between bg-slate-50 rounded-lg px-3 py-2 text-xs"
+                      >
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{event.campaign.name}</span>
+                          <span className="font-medium">
+                            {event.campaign.name}
+                          </span>
                           <span className="text-slate-400">·</span>
-                          <span className="text-slate-600">{event.type.replace("Message", "")}</span>
+                          <span className="text-slate-600">
+                            {event.type.replace("Message", "")}
+                          </span>
                         </div>
-                        <span className="text-slate-400">{new Date(event.occurredAt).toLocaleDateString()}</span>
+                        <span className="text-slate-400">
+                          {new Date(event.occurredAt).toLocaleDateString()}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -240,20 +336,28 @@ export function CustomerDetailDialog({ customerId, onClose }: CustomerDetailDial
               <div>
                 <div className="text-xs text-slate-500 mb-2">Login History</div>
                 {loginLogs.isLoading ? (
-                  <div className="py-6 text-center text-sm text-slate-500">Loading login logs...</div>
+                  <div className="py-6 text-center text-sm text-slate-500">
+                    Loading login logs...
+                  </div>
                 ) : loginLogs.data && loginLogs.data.length > 0 ? (
                   <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-xs text-slate-500 border-b border-slate-100">
                           <th className="text-left px-4 py-2 font-medium">
-                            <div className="flex items-center gap-1"><Clock className="h-3 w-3" /> Time</div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" /> Time
+                            </div>
                           </th>
                           <th className="text-left px-4 py-2 font-medium">
-                            <div className="flex items-center gap-1"><Globe className="h-3 w-3" /> IP Address</div>
+                            <div className="flex items-center gap-1">
+                              <Globe className="h-3 w-3" /> IP Address
+                            </div>
                           </th>
                           <th className="text-left px-4 py-2 font-medium">
-                            <div className="flex items-center gap-1"><Monitor className="h-3 w-3" /> Device</div>
+                            <div className="flex items-center gap-1">
+                              <Monitor className="h-3 w-3" /> Device
+                            </div>
                           </th>
                         </tr>
                       </thead>
@@ -285,16 +389,23 @@ export function CustomerDetailDialog({ customerId, onClose }: CustomerDetailDial
             {/* Communications Tab */}
             <TabsContent value="communications" className="mt-4">
               {communications.isLoading ? (
-                <div className="py-12 text-center text-sm text-slate-500">Loading communications...</div>
+                <div className="py-12 text-center text-sm text-slate-500">
+                  Loading communications...
+                </div>
               ) : communications.error ? (
-                <div className="py-12 text-center text-sm text-rose-600">Failed to load communications</div>
+                <div className="py-12 text-center text-sm text-rose-600">
+                  Failed to load communications
+                </div>
               ) : communications.data && communications.data.length > 0 ? (
                 (() => {
                   const allEvents = flattenCommunications(communications.data);
                   return (
                     <div className="space-y-0">
                       <div className="text-xs text-slate-500 mb-3">
-                        {allEvents.length} event{allEvents.length !== 1 ? "s" : ""} across {communications.data.length} campaign{communications.data.length !== 1 ? "s" : ""}
+                        {allEvents.length} event
+                        {allEvents.length !== 1 ? "s" : ""} across{" "}
+                        {communications.data.length} campaign
+                        {communications.data.length !== 1 ? "s" : ""}
                       </div>
                       <div className="relative">
                         {/* Timeline vertical line */}
@@ -304,20 +415,31 @@ export function CustomerDetailDialog({ customerId, onClose }: CustomerDetailDial
                             const config = getEventConfig(event.type);
                             const Icon = config.icon;
                             return (
-                              <div key={idx} className="relative flex items-start gap-3 pl-0">
-                                <div className={`relative z-10 h-8 w-8 rounded-full ${config.bg} grid place-items-center flex-shrink-0`}>
+                              <div
+                                key={idx}
+                                className="relative flex items-start gap-3 pl-0"
+                              >
+                                <div
+                                  className={`relative z-10 h-8 w-8 rounded-full ${config.bg} grid place-items-center flex-shrink-0`}
+                                >
                                   <Icon className={`h-4 w-4 ${config.color}`} />
                                 </div>
                                 <div className="flex-1 min-w-0 bg-slate-50 rounded-lg px-3 py-2">
                                   <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 min-w-0">
-                                      <span className="font-medium text-sm truncate">{event.campaignName}</span>
-                                      <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${config.bg} ${config.color}`}>
+                                      <span className="font-medium text-sm truncate">
+                                        {event.campaignName}
+                                      </span>
+                                      <span
+                                        className={`text-xs font-medium px-1.5 py-0.5 rounded ${config.bg} ${config.color}`}
+                                      >
                                         {config.label}
                                       </span>
                                     </div>
                                     <span className="text-xs text-slate-400 flex-shrink-0">
-                                      {new Date(event.occurredAt).toLocaleString()}
+                                      {new Date(
+                                        event.occurredAt,
+                                      ).toLocaleString()}
                                     </span>
                                   </div>
                                 </div>

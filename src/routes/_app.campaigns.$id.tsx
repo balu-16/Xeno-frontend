@@ -1,6 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, AlertTriangle, ChevronRight, Radio, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  AlertTriangle,
+  ChevronRight,
+  Radio,
+  RefreshCw,
+} from "lucide-react";
 import { useEffect } from "react";
 import { Funnel } from "@/components/Funnel";
 import { ErrorState, LoadingState } from "@/components/QueryState";
@@ -70,7 +76,10 @@ function CampaignDetails() {
   return (
     <Page>
       <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-4">
-        <Link to="/dashboard" className="hover:text-indigo-600 transition-colors">
+        <Link
+          to="/dashboard"
+          className="hover:text-indigo-600 transition-colors"
+        >
           Dashboard
         </Link>
         <ChevronRight className="h-3 w-3" />

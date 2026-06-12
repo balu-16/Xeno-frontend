@@ -157,9 +157,7 @@ function Auth() {
               icon={Lock}
               label="Password"
               placeholder={
-                mode === "login"
-                  ? "Enter your password"
-                  : "Min. 8 characters"
+                mode === "login" ? "Enter your password" : "Min. 8 characters"
               }
               value={password}
               onChange={(event) => setPassword(event.target.value)}

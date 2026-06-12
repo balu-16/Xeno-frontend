@@ -200,15 +200,17 @@ export const api = {
   customerLoginLogs: (id: string) =>
     request<LoginLog[]>(`/customers/${id}/login-logs`),
   customerCommunications: (id: string) =>
-    request<Array<{
-      campaignId: string;
-      campaignName: string;
-      events: Array<{
-        type: string;
-        occurredAt: string;
-        payload: unknown;
-      }>;
-    }>>(`/customers/${id}/communications`),
+    request<
+      Array<{
+        campaignId: string;
+        campaignName: string;
+        events: Array<{
+          type: string;
+          occurredAt: string;
+          payload: unknown;
+        }>;
+      }>
+    >(`/customers/${id}/communications`),
   customerTags: () => request<string[]>("/customers/tags"),
   segments: (page = 1, search = "") =>
     request<{ data: Segment[]; meta: PageMeta }>(
@@ -286,6 +288,15 @@ export const api = {
     request<Conversation>("/ai/conversations", {
       method: "POST",
       body: JSON.stringify({ title }),
+    }),
+  renameConversation: (id: string, title: string) =>
+    request<Conversation>(`/ai/conversations/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ title }),
+    }),
+  deleteConversation: (id: string) =>
+    request<{ deleted: true }>(`/ai/conversations/${id}`, {
+      method: "DELETE",
     }),
   sendAIMessage: (id: string, content: string) =>
     request<{

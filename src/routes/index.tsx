@@ -15,7 +15,13 @@ import {
 import { useEffect } from "react";
 import { useInView } from "@/lib/useInView";
 
-function AnimatedSection({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function AnimatedSection({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   const { ref, isInView } = useInView();
   return (
     <div
@@ -51,7 +57,9 @@ function Landing() {
               <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center">
                 <Sparkles className="h-4 w-4 text-white" />
               </div>
-              <span className="font-bold text-base tracking-tight">Xeno Mini</span>
+              <span className="font-bold text-base tracking-tight">
+                Xeno Mini
+              </span>
             </Link>
             <div className="hidden md:flex items-center gap-1">
               <a
@@ -114,8 +122,8 @@ function Landing() {
           </h1>
           <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
             Xeno Mini unifies customer segmentation, campaign orchestration, and
-            AI-powered analytics in a single platform. Ship campaigns in minutes,
-            not weeks.
+            AI-powered analytics in a single platform. Ship campaigns in
+            minutes, not weeks.
           </p>
           <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
             <Link
@@ -156,7 +164,10 @@ function Landing() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-16 sm:py-24 bg-slate-50/60 scroll-mt-20">
+      <section
+        id="features"
+        className="py-16 sm:py-24 bg-slate-50/60 scroll-mt-20"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <AnimatedSection className="text-center mb-10 sm:mb-16">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
@@ -166,8 +177,8 @@ function Landing() {
               </span>
             </h2>
             <p className="mt-3 sm:mt-4 text-slate-500 text-base sm:text-lg max-w-xl mx-auto">
-              From audience discovery to campaign delivery, Xeno Mini handles the
-              entire marketing lifecycle.
+              From audience discovery to campaign delivery, Xeno Mini handles
+              the entire marketing lifecycle.
             </p>
           </AnimatedSection>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -244,77 +255,78 @@ function Landing() {
       <section id="about" className="py-16 sm:py-24 scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <AnimatedSection>
-          <div className="grid lg:grid-cols-2 gap-10 sm:gap-16 items-center">
-            <div>
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
-                Built for{" "}
-                <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  B2C marketers
-                </span>{" "}
-                who move fast
-              </h2>
-              <p className="mt-4 sm:mt-6 text-slate-500 text-base sm:text-lg leading-relaxed">
-                Xeno Mini was designed from the ground up for direct-to-consumer
-                brands. We replaced three separate tools with one unified platform
-                that actually understands your business.
-              </p>
-              <div className="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
-                {[
-                  "No-code segment builder with live audience preview",
-                  "Multi-channel campaign delivery with real-time tracking",
-                  "AI copilot that answers business questions from your data",
-                  "Deterministic seed data for reliable demos and testing",
-                ].map((item) => (
-                  <div key={item} className="flex items-start gap-3">
-                    <div className="mt-1 h-5 w-5 rounded-full bg-emerald-100 grid place-items-center shrink-0">
-                      <div className="h-2 w-2 rounded-full bg-emerald-500" />
+            <div className="grid lg:grid-cols-2 gap-10 sm:gap-16 items-center">
+              <div>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">
+                  Built for{" "}
+                  <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    B2C marketers
+                  </span>{" "}
+                  who move fast
+                </h2>
+                <p className="mt-4 sm:mt-6 text-slate-500 text-base sm:text-lg leading-relaxed">
+                  Xeno Mini was designed from the ground up for
+                  direct-to-consumer brands. We replaced three separate tools
+                  with one unified platform that actually understands your
+                  business.
+                </p>
+                <div className="mt-6 sm:mt-8 space-y-3 sm:space-y-4">
+                  {[
+                    "No-code segment builder with live audience preview",
+                    "Multi-channel campaign delivery with real-time tracking",
+                    "AI copilot that answers business questions from your data",
+                    "Deterministic seed data for reliable demos and testing",
+                  ].map((item) => (
+                    <div key={item} className="flex items-start gap-3">
+                      <div className="mt-1 h-5 w-5 rounded-full bg-emerald-100 grid place-items-center shrink-0">
+                        <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                      </div>
+                      <span className="text-sm sm:text-base text-slate-600">
+                        {item}
+                      </span>
                     </div>
-                    <span className="text-sm sm:text-base text-slate-600">
-                      {item}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-            <div className="relative mt-8 lg:mt-0">
-              <div className="bg-gradient-to-br from-indigo-500 via-blue-600 to-sky-400 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-white shadow-2xl">
-                <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                  <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/15 backdrop-blur grid place-items-center border border-white/20">
-                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </div>
-                  <div>
-                    <div className="font-semibold text-sm sm:text-base">
-                      Xeno AI Copilot
+              <div className="relative mt-8 lg:mt-0">
+                <div className="bg-gradient-to-br from-indigo-500 via-blue-600 to-sky-400 rounded-2xl sm:rounded-3xl p-5 sm:p-8 text-white shadow-2xl">
+                  <div className="flex items-center gap-3 mb-4 sm:mb-6">
+                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-white/15 backdrop-blur grid place-items-center border border-white/20">
+                      <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
                     </div>
-                    <div className="text-[10px] sm:text-xs text-white/70">
-                      Every answer is tool-grounded
+                    <div>
+                      <div className="font-semibold text-sm sm:text-base">
+                        Xeno AI Copilot
+                      </div>
+                      <div className="text-[10px] sm:text-xs text-white/70">
+                        Every answer is tool-grounded
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-2.5 sm:space-y-3">
+                    <div className="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4 border border-white/15">
+                      <div className="text-xs sm:text-sm text-white/70 mb-1">
+                        You asked
+                      </div>
+                      <div className="text-sm">Why did Summer Sale fail?</div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur rounded-xl p-3 sm:p-4 border border-white/20">
+                      <div className="text-xs sm:text-sm text-white/70 mb-1">
+                        AI Response
+                      </div>
+                      <div className="text-xs sm:text-sm leading-relaxed">
+                        Summer Sale reached 60% delivery, but only 20% opened.
+                        400 messages hit invalid destinations. Focus on list
+                        hygiene and subject line optimization.
+                      </div>
+                      <div className="mt-2 text-[10px] uppercase tracking-wider text-indigo-200">
+                        Grounded by diagnoseCampaignFailure
+                      </div>
                     </div>
                   </div>
                 </div>
-                <div className="space-y-2.5 sm:space-y-3">
-                  <div className="bg-white/10 backdrop-blur rounded-xl p-3 sm:p-4 border border-white/15">
-                    <div className="text-xs sm:text-sm text-white/70 mb-1">
-                      You asked
-                    </div>
-                    <div className="text-sm">Why did Summer Sale fail?</div>
-                  </div>
-                  <div className="bg-white/20 backdrop-blur rounded-xl p-3 sm:p-4 border border-white/20">
-                    <div className="text-xs sm:text-sm text-white/70 mb-1">
-                      AI Response
-                    </div>
-                    <div className="text-xs sm:text-sm leading-relaxed">
-                      Summer Sale reached 60% delivery, but only 20% opened.
-                      400 messages hit invalid destinations. Focus on list
-                      hygiene and subject line optimization.
-                    </div>
-                    <div className="mt-2 text-[10px] uppercase tracking-wider text-indigo-200">
-                      Grounded by diagnoseCampaignFailure
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
-          </div>
           </AnimatedSection>
         </div>
       </section>
@@ -323,33 +335,36 @@ function Landing() {
       <section className="py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <AnimatedSection>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
-            Ready to replace your marketing stack?
-          </h2>
-          <p className="mt-3 sm:mt-4 text-slate-400 text-base sm:text-lg max-w-xl mx-auto">
-            Get started in minutes. No credit card required. Full access to every
-            feature.
-          </p>
-          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
-            <Link
-              to="/auth"
-              className="h-11 sm:h-12 px-6 sm:px-8 inline-flex items-center justify-center rounded-full text-sm sm:text-base font-medium text-slate-900 bg-white hover:bg-slate-100 transition-all"
-            >
-              Start Free Trial <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-            <a
-              href="#contact"
-              className="h-11 sm:h-12 px-6 sm:px-8 inline-flex items-center justify-center rounded-full text-sm sm:text-base font-medium text-white border border-white/20 hover:bg-white/10 transition-all"
-            >
-              Contact Sales
-            </a>
-          </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">
+              Ready to replace your marketing stack?
+            </h2>
+            <p className="mt-3 sm:mt-4 text-slate-400 text-base sm:text-lg max-w-xl mx-auto">
+              Get started in minutes. No credit card required. Full access to
+              every feature.
+            </p>
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
+              <Link
+                to="/auth"
+                className="h-11 sm:h-12 px-6 sm:px-8 inline-flex items-center justify-center rounded-full text-sm sm:text-base font-medium text-slate-900 bg-white hover:bg-slate-100 transition-all"
+              >
+                Start Free Trial <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+              <a
+                href="#contact"
+                className="h-11 sm:h-12 px-6 sm:px-8 inline-flex items-center justify-center rounded-full text-sm sm:text-base font-medium text-white border border-white/20 hover:bg-white/10 transition-all"
+              >
+                Contact Sales
+              </a>
+            </div>
           </AnimatedSection>
         </div>
       </section>
 
       {/* Footer */}
-      <footer id="contact" className="py-12 sm:py-16 bg-slate-900 text-slate-400 scroll-mt-20">
+      <footer
+        id="contact"
+        className="py-12 sm:py-16 bg-slate-900 text-slate-400 scroll-mt-20"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12">
             <div className="col-span-2 md:col-span-2">
@@ -370,22 +385,34 @@ function Landing() {
               </h4>
               <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                 <li>
-                  <a href="#features" className="hover:text-white transition-colors">
+                  <a
+                    href="#features"
+                    className="hover:text-white transition-colors"
+                  >
                     Features
                   </a>
                 </li>
                 <li>
-                  <a href="#about" className="hover:text-white transition-colors">
+                  <a
+                    href="#about"
+                    className="hover:text-white transition-colors"
+                  >
                     About
                   </a>
                 </li>
                 <li>
-                  <Link to="/auth" className="hover:text-white transition-colors">
+                  <Link
+                    to="/auth"
+                    className="hover:text-white transition-colors"
+                  >
                     Login
                   </Link>
                 </li>
                 <li>
-                  <Link to="/auth" className="hover:text-white transition-colors">
+                  <Link
+                    to="/auth"
+                    className="hover:text-white transition-colors"
+                  >
                     Sign Up
                   </Link>
                 </li>

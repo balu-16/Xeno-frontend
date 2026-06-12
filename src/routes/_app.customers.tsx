@@ -1,6 +1,15 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { ChevronDown, ChevronLeft, ChevronRight, Download, Search, Tag, Users, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Search,
+  Tag,
+  Users,
+  X,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { CustomerDetailDialog } from "@/components/CustomerDetailDialog";
 import { PageHeader } from "@/components/PageHeader";
@@ -25,7 +34,9 @@ function Customers() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("");
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(
+    null,
+  );
 
   // Debounce search to avoid a network request on every keystroke
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -68,7 +79,9 @@ function Customers() {
                     Tags: c.tags?.join(", ") ?? "",
                     Orders: c.orders,
                     "Lifetime Value": c.lifetimeValue,
-                    "Last Activity": new Date(c.lastActivity).toLocaleDateString(),
+                    "Last Activity": new Date(
+                      c.lastActivity,
+                    ).toLocaleDateString(),
                   })),
                 )
               }
@@ -103,7 +116,9 @@ function Customers() {
               >
                 <option value="">All Tags</option>
                 {tagsQuery.data.map((tag) => (
-                  <option key={tag} value={tag}>{tag}</option>
+                  <option key={tag} value={tag}>
+                    {tag}
+                  </option>
                 ))}
               </select>
               <ChevronDown className="h-4 w-4 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />

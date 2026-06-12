@@ -12,11 +12,36 @@ import {
 } from "lucide-react";
 
 const commands = [
-  { to: "/dashboard", label: "Dashboard", icon: BarChart3, keywords: "home overview" },
-  { to: "/customers", label: "Customers", icon: Users, keywords: "users people" },
-  { to: "/segments", label: "Segments", icon: Target, keywords: "audience filter" },
-  { to: "/campaigns", label: "Campaigns", icon: Megaphone, keywords: "marketing messages" },
-  { to: "/analytics", label: "Analytics", icon: TrendingUp, keywords: "stats charts" },
+  {
+    to: "/dashboard",
+    label: "Dashboard",
+    icon: BarChart3,
+    keywords: "home overview",
+  },
+  {
+    to: "/customers",
+    label: "Customers",
+    icon: Users,
+    keywords: "users people",
+  },
+  {
+    to: "/segments",
+    label: "Segments",
+    icon: Target,
+    keywords: "audience filter",
+  },
+  {
+    to: "/campaigns",
+    label: "Campaigns",
+    icon: Megaphone,
+    keywords: "marketing messages",
+  },
+  {
+    to: "/analytics",
+    label: "Analytics",
+    icon: TrendingUp,
+    keywords: "stats charts",
+  },
   { to: "/ai", label: "AI History", icon: Bot, keywords: "copilot chat" },
 ];
 
@@ -87,15 +112,21 @@ export function CommandPalette() {
         </Command.List>
         <div className="px-4 py-2.5 border-t border-slate-100 flex items-center gap-4 text-[10px] text-slate-400">
           <span className="flex items-center gap-1">
-            <kbd className="px-1 py-0.5 rounded bg-slate-100 text-slate-500 font-medium">↑↓</kbd>
+            <kbd className="px-1 py-0.5 rounded bg-slate-100 text-slate-500 font-medium">
+              ↑↓
+            </kbd>
             Navigate
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1 py-0.5 rounded bg-slate-100 text-slate-500 font-medium">↵</kbd>
+            <kbd className="px-1 py-0.5 rounded bg-slate-100 text-slate-500 font-medium">
+              ↵
+            </kbd>
             Select
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1 py-0.5 rounded bg-slate-100 text-slate-500 font-medium">esc</kbd>
+            <kbd className="px-1 py-0.5 rounded bg-slate-100 text-slate-500 font-medium">
+              esc
+            </kbd>
             Close
           </span>
         </div>
@@ -104,7 +135,9 @@ export function CommandPalette() {
   );
 }
 
-export function CommandPaletteButton() {
+export function CommandPaletteButton({
+  collapsed,
+}: { collapsed?: boolean } = {}) {
   return (
     <button
       onClick={() => {
@@ -112,13 +145,19 @@ export function CommandPaletteButton() {
           new KeyboardEvent("keydown", { key: "k", metaKey: true }),
         );
       }}
-      className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+      className={`flex items-center rounded-lg text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors ${
+        collapsed ? "justify-center h-9 w-full" : "gap-2 px-3 py-1.5"
+      }`}
     >
-      <Search className="h-3.5 w-3.5" />
-      <span className="hidden sm:inline">Search</span>
-      <kbd className="hidden sm:inline-flex h-4 px-1 items-center rounded bg-slate-100 text-[10px] text-slate-500 font-medium">
-        ⌘K
-      </kbd>
+      <Search className="h-3.5 w-3.5 shrink-0" />
+      {!collapsed && (
+        <>
+          <span className="hidden sm:inline">Search</span>
+          <kbd className="hidden sm:inline-flex h-4 px-1 items-center rounded bg-slate-100 text-[10px] text-slate-500 font-medium">
+            ⌘K
+          </kbd>
+        </>
+      )}
     </button>
   );
 }

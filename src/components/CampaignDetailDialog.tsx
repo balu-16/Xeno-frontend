@@ -1,5 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import { Activity, Calendar, Mail, MessageSquare, Phone, Radio, Users } from "lucide-react";
+import {
+  Activity,
+  Calendar,
+  Mail,
+  MessageSquare,
+  Phone,
+  Radio,
+  Users,
+} from "lucide-react";
 import { api } from "@/lib/api";
 import {
   Dialog,
@@ -29,7 +37,10 @@ const statusColors: Record<string, string> = {
   FAILED: "bg-rose-100 text-rose-700",
 };
 
-export function CampaignDetailDialog({ campaignId, onClose }: CampaignDetailDialogProps) {
+export function CampaignDetailDialog({
+  campaignId,
+  onClose,
+}: CampaignDetailDialogProps) {
   const campaign = useQuery({
     queryKey: ["campaign-detail", campaignId],
     queryFn: () => api.campaign(campaignId!),
@@ -43,12 +54,18 @@ export function CampaignDetailDialog({ campaignId, onClose }: CampaignDetailDial
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Campaign Details</DialogTitle>
-          <DialogDescription>View campaign performance, analytics, and delivery status.</DialogDescription>
+          <DialogDescription>
+            View campaign performance, analytics, and delivery status.
+          </DialogDescription>
         </DialogHeader>
         {campaign.isLoading ? (
-          <div className="py-12 text-center text-sm text-slate-500">Loading...</div>
+          <div className="py-12 text-center text-sm text-slate-500">
+            Loading...
+          </div>
         ) : campaign.error ? (
-          <div className="py-12 text-center text-sm text-rose-600">Failed to load campaign</div>
+          <div className="py-12 text-center text-sm text-rose-600">
+            Failed to load campaign
+          </div>
         ) : campaign.data ? (
           <div className="space-y-6">
             {/* Header */}
@@ -56,10 +73,13 @@ export function CampaignDetailDialog({ campaignId, onClose }: CampaignDetailDial
               <div>
                 <h3 className="text-xl font-semibold">{campaign.data.name}</h3>
                 <p className="text-sm text-slate-500 mt-1">
-                  Created {new Date(campaign.data.createdAt).toLocaleDateString()}
+                  Created{" "}
+                  {new Date(campaign.data.createdAt).toLocaleDateString()}
                 </p>
               </div>
-              <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${statusColors[campaign.data.status] ?? statusColors.DRAFT}`}>
+              <span
+                className={`text-xs font-semibold px-3 py-1.5 rounded-full ${statusColors[campaign.data.status] ?? statusColors.DRAFT}`}
+              >
                 {campaign.data.status}
               </span>
             </div>
@@ -71,7 +91,9 @@ export function CampaignDetailDialog({ campaignId, onClose }: CampaignDetailDial
                   <ChannelIcon className="h-3.5 w-3.5" />
                   Channel
                 </div>
-                <div className="mt-1 font-semibold text-sm">{campaign.data.channel}</div>
+                <div className="mt-1 font-semibold text-sm">
+                  {campaign.data.channel}
+                </div>
               </div>
               <div className="bg-slate-50 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -87,7 +109,9 @@ export function CampaignDetailDialog({ campaignId, onClose }: CampaignDetailDial
                   <Activity className="h-3.5 w-3.5" />
                   Segment
                 </div>
-                <div className="mt-1 font-semibold text-sm truncate">{campaign.data.segment.name}</div>
+                <div className="mt-1 font-semibold text-sm truncate">
+                  {campaign.data.segment.name}
+                </div>
               </div>
               <div className="bg-slate-50 rounded-lg p-3">
                 <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -106,14 +130,18 @@ export function CampaignDetailDialog({ campaignId, onClose }: CampaignDetailDial
             {campaign.data.subject && (
               <div>
                 <div className="text-xs text-slate-500 mb-1">Subject</div>
-                <div className="text-sm bg-slate-50 rounded-lg p-3">{campaign.data.subject}</div>
+                <div className="text-sm bg-slate-50 rounded-lg p-3">
+                  {campaign.data.subject}
+                </div>
               </div>
             )}
 
             {/* Message */}
             <div>
               <div className="text-xs text-slate-500 mb-1">Message</div>
-              <div className="text-sm bg-slate-50 rounded-lg p-3 whitespace-pre-wrap">{campaign.data.message}</div>
+              <div className="text-sm bg-slate-50 rounded-lg p-3 whitespace-pre-wrap">
+                {campaign.data.message}
+              </div>
             </div>
 
             {/* Analytics */}
@@ -129,9 +157,16 @@ export function CampaignDetailDialog({ campaignId, onClose }: CampaignDetailDial
                     ["Converted", campaign.data.analytics.totalConverted],
                     ["Failed", campaign.data.analytics.totalFailed],
                   ].map(([label, value]) => (
-                    <div key={label} className="text-center bg-slate-50 rounded-lg p-2">
-                      <div className="text-lg font-semibold">{Number(value).toLocaleString()}</div>
-                      <div className="text-[10px] uppercase text-slate-400">{label}</div>
+                    <div
+                      key={label}
+                      className="text-center bg-slate-50 rounded-lg p-2"
+                    >
+                      <div className="text-lg font-semibold">
+                        {Number(value).toLocaleString()}
+                      </div>
+                      <div className="text-[10px] uppercase text-slate-400">
+                        {label}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -142,9 +177,16 @@ export function CampaignDetailDialog({ campaignId, onClose }: CampaignDetailDial
                     ["Click Rate", campaign.data.analytics.clickRate],
                     ["Conversion Rate", campaign.data.analytics.conversionRate],
                   ].map(([label, value]) => (
-                    <div key={label} className="text-center bg-indigo-50 rounded-lg p-2">
-                      <div className="text-lg font-semibold text-indigo-700">{Number(value).toFixed(1)}%</div>
-                      <div className="text-[10px] uppercase text-indigo-400">{label}</div>
+                    <div
+                      key={label}
+                      className="text-center bg-indigo-50 rounded-lg p-2"
+                    >
+                      <div className="text-lg font-semibold text-indigo-700">
+                        {Number(value).toFixed(1)}%
+                      </div>
+                      <div className="text-[10px] uppercase text-indigo-400">
+                        {label}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -157,9 +199,14 @@ export function CampaignDetailDialog({ campaignId, onClose }: CampaignDetailDial
                 <div className="text-xs text-slate-500 mb-2">Failures</div>
                 <div className="space-y-2">
                   {campaign.data.failures.map((f) => (
-                    <div key={f.reason} className="flex justify-between bg-rose-50 rounded-lg px-4 py-2 text-sm">
+                    <div
+                      key={f.reason}
+                      className="flex justify-between bg-rose-50 rounded-lg px-4 py-2 text-sm"
+                    >
                       <span className="text-rose-800">{f.reason}</span>
-                      <span className="font-semibold text-rose-900">{f.count}</span>
+                      <span className="font-semibold text-rose-900">
+                        {f.count}
+                      </span>
                     </div>
                   ))}
                 </div>

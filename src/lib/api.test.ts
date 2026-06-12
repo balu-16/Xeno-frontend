@@ -31,7 +31,14 @@ describe("api.me", () => {
       json: () =>
         Promise.resolve({
           success: true,
-          data: { user: { id: "1", email: "test@test.com", name: "Test", role: "ADMIN" } },
+          data: {
+            user: {
+              id: "1",
+              email: "test@test.com",
+              name: "Test",
+              role: "ADMIN",
+            },
+          },
         }),
     });
     const result = await api.me();
@@ -64,7 +71,9 @@ describe("api.login", () => {
       json: () =>
         Promise.resolve({
           success: true,
-          data: { user: { id: "1", email: "a@b.com", name: "A", role: "MEMBER" } },
+          data: {
+            user: { id: "1", email: "a@b.com", name: "A", role: "MEMBER" },
+          },
         }),
     });
     await api.login("a@b.com", "password123");

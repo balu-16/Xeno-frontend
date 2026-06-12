@@ -141,4 +141,36 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+
+  button,
+  select,
+  [role="button"],
+  a,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="reset"] {
+    cursor: pointer;
+  }
+
+  select {
+    appearance: auto;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not(
+      [type="reset"]
+    ):not([type="button"]):not([type="image"]),
+  textarea {
+    cursor: text;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

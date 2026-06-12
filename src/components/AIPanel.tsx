@@ -107,7 +107,10 @@ export function AIPanel() {
               Every answer is tool-grounded
             </p>
           </div>
-          <button aria-label="Minimize AI panel" className="h-8 w-8 grid place-items-center rounded-md text-slate-400 hover:bg-slate-100">
+          <button
+            aria-label="Minimize AI panel"
+            className="h-8 w-8 grid place-items-center rounded-md text-slate-400 hover:bg-slate-100"
+          >
             <Minus className="h-4 w-4" />
           </button>
           <button
@@ -118,13 +121,18 @@ export function AIPanel() {
             <X className="h-4 w-4" />
           </button>
         </header>
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-5 space-y-3">
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto px-5 py-5 space-y-3"
+        >
           {messages.map((message, index) => (
             <div
               key={`${message.role}-${index}`}
               className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              {message.role === "assistant" && index === 0 && messages.length === 1 ? (
+              {message.role === "assistant" &&
+              index === 0 &&
+              messages.length === 1 ? (
                 <div className="w-full">
                   <div className="bg-slate-50 rounded-2xl rounded-bl-md px-4 py-3 text-sm text-slate-600 leading-relaxed">
                     {message.content}

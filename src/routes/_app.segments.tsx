@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Bot, Plus, Sparkles, Target, Users, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   segmentRuleGroupSchema,
   type SegmentRuleGroup,
@@ -86,19 +86,28 @@ function Segments() {
     },
   });
 
+  // Listen for custom event from PageActions component
+  useEffect(() => {
+    const handler = () => setOpen(true);
+    window.addEventListener("open-segment-creator", handler);
+    return () => window.removeEventListener("open-segment-creator", handler);
+  }, []);
+
   return (
     <div className="px-8 py-8 max-w-[1400px] mx-auto">
       <PageHeader
         title="Segments"
         subtitle="Build secure audiences manually or from natural language."
-        action={canManage ? (
-          <button
-            onClick={() => setOpen(true)}
-            className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2"
-          >
-            <Sparkles className="h-4 w-4" /> Generate segment
-          </button>
-        ) : null}
+        action={
+          canManage ? (
+            <button
+              onClick={() => setOpen(true)}
+              className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2"
+            >
+              <Sparkles className="h-4 w-4" /> Generate segment
+            </button>
+          ) : null
+        }
       />
       {query.isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -126,6 +135,16 @@ function Segments() {
           title="No segments yet"
           description="Generate your first target audience with AI."
           illustration="segments"
+          action={
+            canManage ? (
+              <button
+                onClick={() => setOpen(true)}
+                className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2 mx-auto"
+              >
+                <Sparkles className="h-4 w-4" /> Generate segment
+              </button>
+            ) : null
+          }
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -155,17 +174,17 @@ function Segments() {
                 {JSON.stringify(segment.rules)}
               </div>
               {canManage && (
-              <button
-                onClick={() =>
-                  void navigate({
-                    to: "/campaigns",
-                    search: { segmentId: segment.id },
-                  })
-                }
-                className="mt-4 w-full h-9 rounded-lg border border-slate-200 text-sm hover:border-indigo-300 hover:text-indigo-700"
-              >
-                Launch campaign
-              </button>
+                <button
+                  onClick={() =>
+                    void navigate({
+                      to: "/campaigns",
+                      search: { segmentId: segment.id },
+                    })
+                  }
+                  className="mt-4 w-full h-9 rounded-lg border border-slate-200 text-sm hover:border-indigo-300 hover:text-indigo-700"
+                >
+                  Launch campaign
+                </button>
               )}
             </div>
           ))}

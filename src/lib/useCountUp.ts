@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 
-export function useCountUp(
-  target: number,
-  duration = 800,
-  decimals = 0,
-) {
+export function useCountUp(target: number, duration = 800, decimals = 0) {
   const [value, setValue] = useState(0);
 
   useEffect(() => {

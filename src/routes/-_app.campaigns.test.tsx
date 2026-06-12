@@ -5,12 +5,10 @@ import React from "react";
 
 // Mock router — createFileRoute returns a curried factory
 vi.mock("@tanstack/react-router", () => ({
-  createFileRoute: vi.fn(
-    () => (config: Record<string, unknown>) => ({
-      ...config,
-      useSearch: vi.fn(() => ({ segmentId: undefined })),
-    }),
-  ),
+  createFileRoute: vi.fn(() => (config: Record<string, unknown>) => ({
+    ...config,
+    useSearch: vi.fn(() => ({ segmentId: undefined })),
+  })),
   Link: ({
     children,
     to,
@@ -61,14 +59,26 @@ const mockSegments = vi.mocked(api.segments);
 function makeCampaign(
   id = "1",
   name = "Test Campaign",
-  status: "DRAFT" | "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED" | "SCHEDULED" = "COMPLETED",
+  status:
+    | "DRAFT"
+    | "QUEUED"
+    | "RUNNING"
+    | "COMPLETED"
+    | "FAILED"
+    | "SCHEDULED" = "COMPLETED",
 ) {
   return {
     id,
     name,
     segmentId: "seg-1",
     channel: "EMAIL" as const,
-    status: status as "DRAFT" | "SCHEDULED" | "QUEUED" | "RUNNING" | "COMPLETED" | "FAILED",
+    status: status as
+      | "DRAFT"
+      | "SCHEDULED"
+      | "QUEUED"
+      | "RUNNING"
+      | "COMPLETED"
+      | "FAILED",
     subject: "Test Subject",
     message: "Test message",
     audienceSizeSnapshot: 100,

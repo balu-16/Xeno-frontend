@@ -55,8 +55,10 @@ function Dashboard() {
   const query = useQuery({
     queryKey: ["dashboard"],
     queryFn: api.dashboard,
-    staleTime: 10_000,
-    refetchInterval: 30_000, // Refetch every 30 seconds as fallback
+    staleTime: 0,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   useEffect(() => {
@@ -236,7 +238,13 @@ function Dashboard() {
                   <stop offset="5%" stopColor="#2563eb" stopOpacity={0.15} />
                   <stop offset="95%" stopColor="#2563eb" stopOpacity={0} />
                 </linearGradient>
-                <linearGradient id="convertedGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="convertedGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.15} />
                   <stop offset="95%" stopColor="#4f46e5" stopOpacity={0} />
                 </linearGradient>
@@ -254,7 +262,11 @@ function Dashboard() {
                 axisLine={false}
               />
               <YAxis fontSize={11} tickLine={false} axisLine={false} />
-              <Tooltip content={<ChartTooltip labelFormatter={(v) => shortDate(String(v))} />} />
+              <Tooltip
+                content={
+                  <ChartTooltip labelFormatter={(v) => shortDate(String(v))} />
+                }
+              />
               <Area
                 type="monotone"
                 dataKey="sent"
@@ -283,7 +295,13 @@ function Dashboard() {
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={dashboard.revenueTrends}>
               <defs>
-                <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="revenueGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="5%" stopColor="#059669" stopOpacity={0.15} />
                   <stop offset="95%" stopColor="#059669" stopOpacity={0} />
                 </linearGradient>
