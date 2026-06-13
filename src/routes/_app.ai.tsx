@@ -268,7 +268,7 @@ function AIHistory() {
           </button>
         }
       />
-      <div className="h-[calc(100vh-170px)] min-h-[600px] grid grid-cols-1 md:grid-cols-[320px_1fr] bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="h-[calc(100vh-170px)] min-h-150 grid grid-cols-1 md:grid-cols-[320px_1fr] bg-white border border-slate-200 rounded-xl overflow-hidden">
         <aside className="border-r border-slate-100 overflow-y-auto">
           <div className="p-4 text-xs uppercase tracking-wider text-slate-400">
             Previous conversations
@@ -319,8 +319,10 @@ function AIHistory() {
                     onClick={() => setSelectedId(item.id)}
                     className="flex-1 text-left px-4 py-3"
                   >
-                    <div className="text-sm font-medium truncate">
-                      {item.title}
+                    <div className="text-sm font-medium">
+                      {item.title.length > 25
+                        ? item.title.slice(0, 25) + "......"
+                        : item.title}
                     </div>
                     <div className="text-xs text-slate-400 mt-1">
                       {new Date(item.updatedAt).toLocaleString()}
@@ -426,7 +428,7 @@ function AIHistory() {
                         <button
                           key={s}
                           onClick={() => setInput(s)}
-                          className="shrink-0 text-[11px] text-slate-500 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-full px-3 py-1 transition-colors truncate max-w-[200px]"
+                          className="shrink-0 text-[11px] text-slate-500 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-full px-3 py-1 transition-colors truncate max-w-50"
                         >
                           {skill.icon} {s}
                         </button>
@@ -475,7 +477,8 @@ function AIHistory() {
                     What can I help you with?
                   </h3>
                   <p className="text-sm text-slate-500">
-                    Ask me anything about your campaigns, customers, segments, or analytics.
+                    Ask me anything about your campaigns, customers, segments,
+                    or analytics.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -514,5 +517,5 @@ function AIHistory() {
 }
 
 function Page({ children }: { children: React.ReactNode }) {
-  return <div className="px-8 py-8 max-w-[1500px] mx-auto">{children}</div>;
+  return <div className="px-8 py-8 max-w-375 mx-auto">{children}</div>;
 }

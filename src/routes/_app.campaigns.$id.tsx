@@ -7,9 +7,20 @@ import {
   Radio,
   RefreshCw,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { Funnel } from "@/components/Funnel";
 import { ErrorState, LoadingState } from "@/components/QueryState";
+import { useCountUp } from "@/lib/useCountUp";
 import { api } from "@/lib/api";
 
 export const Route = createFileRoute("/_app/campaigns/$id")({
@@ -127,34 +138,39 @@ function CampaignDetails() {
           ["Clicked", metrics.funnel.clicked],
           ["Converted", metrics.funnel.converted],
         ].map(([label, value]) => (
-          <div
+          <CampaignStatCard
             key={label}
-            className="bg-white border border-slate-200 rounded-xl p-4"
-          >
-            <div className="text-xs text-slate-500">{label}</div>
-            <div className="mt-2 text-2xl font-semibold">
-              {Number(value).toLocaleString()}
-            </div>
-          </div>
+            label={String(label)}
+            value={Number(value)}
+          />
         ))}
       </div>
       <div className="mt-4 grid grid-cols-1 xl:grid-cols-3 gap-4">
-        <div className="xl:col-span-2 bg-white border border-slate-200 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="font-semibold">Campaign Lifecycle Funnel</h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Derived from immutable campaign events
-              </p>
+        <div className="xl:col-span-2 space-y-4">
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="font-semibold">Campaign Lifecycle Funnel</h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Derived from immutable campaign events
+                </p>
+              </div>
+              <button
+                onClick={() => void performance.refetch()}
+                className="h-8 px-3 rounded-lg border border-slate-200 text-xs flex items-center gap-2"
+              >
+                <RefreshCw className="h-3.5 w-3.5" /> Refresh
+              </button>
             </div>
-            <button
-              onClick={() => void performance.refetch()}
-              className="h-8 px-3 rounded-lg border border-slate-200 text-xs flex items-center gap-2"
-            >
-              <RefreshCw className="h-3.5 w-3.5" /> Refresh
-            </button>
+            <CampaignFunnelChart funnel={metrics.funnel} />
           </div>
-          <Funnel performance={metrics} />
+          <div className="bg-white border border-slate-200 rounded-xl p-6">
+            <h2 className="font-semibold">Stage Retention</h2>
+            <p className="text-xs text-slate-500 mt-1 mb-4">
+              Drop-off between each lifecycle stage
+            </p>
+            <Funnel performance={metrics} />
+          </div>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-6">
           <h2 className="font-semibold">Marketing Rates</h2>
@@ -204,6 +220,85 @@ function CampaignDetails() {
         </div>
       )}
     </Page>
+  );
+}
+
+function CampaignStatCard({ label, value }: { label: string; value: number }) {
+  const animated = useCountUp(value, 900);
+  return (
+    <div className="group bg-white border border-slate-200 rounded-xl p-4 transition-all duration-300 hover:shadow-md hover:shadow-slate-200/50 hover:border-slate-300/80 hover:-translate-y-0.5">
+      <div className="text-xs text-slate-500">{label}</div>
+      <div className="mt-2 text-2xl font-semibold tabular-nums">
+        {animated.toLocaleString()}
+      </div>
+    </div>
+  );
+}
+
+function CampaignFunnelChart({
+  funnel,
+}: {
+  funnel: { sent: number; delivered: number; opened: number; clicked: number; converted: number };
+}) {
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const data = [
+    { stage: "Sent", value: funnel.sent },
+    { stage: "Delivered", value: funnel.delivered },
+    { stage: "Opened", value: funnel.opened },
+    { stage: "Clicked", value: funnel.clicked },
+    { stage: "Converted", value: funnel.converted },
+  ];
+
+  return (
+    <div className="h-72">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart
+          data={data}
+          onMouseMove={(state) => {
+            if (state?.activeTooltipIndex !== undefined) {
+              setActiveIndex(state.activeTooltipIndex);
+            }
+          }}
+          onMouseLeave={() => setActiveIndex(null)}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="#f1f5f9"
+            vertical={false}
+          />
+          <XAxis
+            dataKey="stage"
+            fontSize={11}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis fontSize={11} tickLine={false} axisLine={false} />
+          <Tooltip
+            cursor={false}
+            content={({ active, payload }) => {
+              if (!active || !payload?.length) return null;
+              return (
+                <div className="bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg">
+                  {payload[0].payload.stage}:{" "}
+                  {Number(payload[0].value).toLocaleString()}
+                </div>
+              );
+            }}
+          />
+          <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+            {data.map((_, index) => (
+              <Cell
+                key={index}
+                fill={activeIndex === index ? "#3730a3" : "#4f46e5"}
+                fillOpacity={
+                  activeIndex === null || activeIndex === index ? 1 : 0.4
+                }
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
   );
 }
 

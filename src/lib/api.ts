@@ -4,6 +4,13 @@ import type {
   Channel,
   DashboardMetrics,
   SegmentRuleGroup,
+  AIInsightView,
+  InsightActionView,
+  ExecutiveScoreView,
+  InsightCorrelationView,
+  DriftMetricsView,
+  CampaignSimulationView,
+  ExecutiveSummaryView,
 } from "./contracts";
 
 const API_URL =
@@ -309,4 +316,63 @@ export const api = {
       body: JSON.stringify({ content }),
     }),
   analyticsStreamUrl: `${API_URL}/analytics/stream`,
+  insights: (params?: {
+    type?: string;
+    priority?: string;
+    status?: string;
+    page?: number;
+  }) =>
+    request<{ data: AIInsightView[]; meta: PageMeta }>(
+      `/insights${queryString(params ?? {})}`,
+    ),
+  insight: (id: string) => request<AIInsightView>(`/insights/${id}`),
+  insightSummary: () => request<ExecutiveSummaryView>("/insights/summary"),
+  insightStatus: () =>
+    request<{
+      isGenerating: boolean;
+      lastRunAt: string | null;
+      lastRunGenerated: number;
+      nextRunAt: string | null;
+    }>("/insights/status"),
+  dismissInsight: (id: string) =>
+    request<AIInsightView>(`/insights/${id}/dismiss`, { method: "PATCH" }),
+  completeInsight: (id: string) =>
+    request<AIInsightView>(`/insights/${id}/complete`, { method: "PATCH" }),
+  refreshInsights: () =>
+    request<{ generated: number }>("/insights/refresh", { method: "POST" }),
+  insightActions: (id: string) =>
+    request<InsightActionView[]>(`/insights/${id}/actions`),
+  executeInsightAction: (actionId: string) =>
+    request<InsightActionView>(`/insights/actions/${actionId}/execute`, {
+      method: "POST",
+    }),
+  submitInsightFeedback: (
+    id: string,
+    rating: "USEFUL" | "NOT_USEFUL",
+    comment?: string,
+  ) =>
+    request<{ submitted: true }>(`/insights/${id}/feedback`, {
+      method: "POST",
+      body: JSON.stringify({ rating, comment }),
+    }),
+  insightFeedbackAnalytics: () =>
+    request<{ usefulRate: number; totalFeedback: number }>(
+      "/insights/feedback/analytics",
+    ),
+  simulateCampaign: (id: string, segmentId: string, channel: string) =>
+    request<CampaignSimulationView>(`/insights/${id}/simulate`, {
+      method: "POST",
+      body: JSON.stringify({ segmentId, channel }),
+    }),
+  executiveScore: () =>
+    request<ExecutiveScoreView>("/insights/executive-score"),
+  executiveScoreHistory: (days?: number) =>
+    request<ExecutiveScoreView[]>(
+      `/insights/executive-score/history${queryString({ days })}`,
+    ),
+  insightCorrelations: () =>
+    request<InsightCorrelationView[]>("/insights/correlations"),
+  insightCorrelation: (id: string) =>
+    request<InsightCorrelationView>(`/insights/correlations/${id}`),
+  insightDriftMetrics: () => request<DriftMetricsView[]>("/insights/drift"),
 };

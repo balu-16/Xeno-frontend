@@ -3,6 +3,7 @@ import {
   Bot,
   ChevronLeft,
   ChevronRight,
+  Lightbulb,
   LogOut,
   Megaphone,
   Menu,
@@ -24,7 +25,6 @@ import { api, ApiError, type User } from "@/lib/api";
 import { AIPanel } from "./AIPanel";
 import { CommandPalette, CommandPaletteButton } from "./CommandPalette";
 import { NotificationCenter } from "./NotificationCenter";
-import { PageActions } from "./PageActions";
 
 const allNavigation = [
   { to: "/dashboard", label: "Dashboard", icon: BarChart3 },
@@ -32,7 +32,8 @@ const allNavigation = [
   { to: "/segments", label: "Segments", icon: Target },
   { to: "/campaigns", label: "Campaigns", icon: Megaphone },
   { to: "/analytics", label: "Analytics", icon: TrendingUp },
-  { to: "/ai", label: "AI History", icon: Bot },
+  { to: "/insights", label: "AI Insights", icon: Lightbulb },
+  { to: "/ai", label: "AI Copilot", icon: Bot },
 ] as const;
 
 function getNavigation(_role: User["role"]) {
@@ -110,7 +111,7 @@ export function AppShell() {
     return (
       <div className="min-h-screen grid place-items-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center animate-pulse">
+          <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-600 to-indigo-600 grid place-items-center animate-pulse">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
           <span className="text-sm text-slate-500">Loading Xeno workspace</span>
@@ -159,7 +160,7 @@ export function AppShell() {
         className={`h-screen border-r border-slate-200/80 bg-white flex flex-col shrink-0 transition-all duration-300 ease-in-out
           max-md:fixed max-md:z-50 max-md:shadow-2xl
           ${mobileOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"}
-          ${collapsed ? "w-[68px]" : "w-60"}
+          ${collapsed ? "w-17" : "w-60"}
         `}
       >
         <div
@@ -167,7 +168,7 @@ export function AppShell() {
             collapsed ? "justify-center px-2" : "px-5 gap-2"
           }`}
         >
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 grid place-items-center shadow-sm shrink-0">
+          <div className="h-8 w-8 rounded-lg bg-linear-to-br from-blue-600 to-indigo-600 grid place-items-center shadow-sm shrink-0">
             <Sparkles className="h-4 w-4 text-white" />
           </div>
           {!collapsed && (
@@ -175,17 +176,32 @@ export function AppShell() {
               Xeno Mini
             </span>
           )}
-          {!collapsed && (
-            <div className="ml-auto flex items-center gap-1">
-              <NotificationCenter />
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="md:hidden h-9 w-9 rounded-lg grid place-items-center text-slate-400 hover:bg-slate-100"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          )}
+          <div
+            className={`${collapsed ? "" : "ml-auto"} flex items-center gap-1`}
+          >
+            <button
+              onClick={() => setCollapsed((c) => !c)}
+              aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className="h-7 w-7 rounded-md grid place-items-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            >
+              {collapsed ? (
+                <ChevronRight className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronLeft className="h-3.5 w-3.5" />
+              )}
+            </button>
+            {!collapsed && (
+              <>
+                <NotificationCenter />
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="md:hidden h-9 w-9 rounded-lg grid place-items-center text-slate-400 hover:bg-slate-100"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
         <div
           className={`border-b border-slate-100 ${collapsed ? "px-2 py-2" : "px-3 py-2"}`}
@@ -218,7 +234,7 @@ export function AppShell() {
                     }`}
                   >
                     {active && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-indigo-600" />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.75 h-5 rounded-r-full bg-indigo-600" />
                     )}
                     <Icon
                       className={`h-4 w-4 shrink-0 ${
@@ -240,7 +256,7 @@ export function AppShell() {
           >
             {!collapsed && (
               <>
-                <div className="h-9 w-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-500 grid place-items-center text-white text-sm font-semibold shrink-0">
+                <div className="h-9 w-9 rounded-full bg-linear-to-br from-blue-500 to-indigo-500 grid place-items-center text-white text-sm font-semibold shrink-0">
                   {auth.data.user.name
                     .split(" ")
                     .map((part) => part[0])
@@ -275,18 +291,6 @@ export function AppShell() {
             </button>
           </div>
         </div>
-        <button
-          onClick={() => setCollapsed((c) => !c)}
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="absolute bottom-4 -right-3 z-10 h-6 w-6 rounded-full bg-white border border-slate-200 shadow-sm grid place-items-center text-slate-400 hover:text-slate-600 hover:shadow-md transition-all"
-          style={{ left: collapsed ? "52px" : "228px" }}
-        >
-          {collapsed ? (
-            <ChevronRight className="h-3 w-3" />
-          ) : (
-            <ChevronLeft className="h-3 w-3" />
-          )}
-        </button>
       </aside>
 
       <main className="flex-1 min-h-0 relative overflow-hidden">
@@ -295,7 +299,6 @@ export function AppShell() {
             <Outlet />
           </div>
         </div>
-        <PageActions />
         <AIPanel />
       </main>
     </div>

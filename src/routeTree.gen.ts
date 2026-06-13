@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppSegmentsRouteImport } from './routes/_app.segments'
+import { Route as AppInsightsRouteImport } from './routes/_app.insights'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppCustomersRouteImport } from './routes/_app.customers'
 import { Route as AppCampaignsRouteImport } from './routes/_app.campaigns'
@@ -43,6 +44,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppSegmentsRoute = AppSegmentsRouteImport.update({
   id: '/segments',
   path: '/segments',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppInsightsRoute = AppInsightsRouteImport.update({
+  id: '/insights',
+  path: '/insights',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -85,6 +91,7 @@ export interface FileRoutesByFullPath {
   '/campaigns': typeof AppCampaignsRouteWithChildren
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
+  '/insights': typeof AppInsightsRoute
   '/segments': typeof AppSegmentsRoute
   '/campaigns/$id': typeof AppCampaignsIdRoute
 }
@@ -97,6 +104,7 @@ export interface FileRoutesByTo {
   '/campaigns': typeof AppCampaignsRouteWithChildren
   '/customers': typeof AppCustomersRoute
   '/dashboard': typeof AppDashboardRoute
+  '/insights': typeof AppInsightsRoute
   '/segments': typeof AppSegmentsRoute
   '/campaigns/$id': typeof AppCampaignsIdRoute
 }
@@ -111,6 +119,7 @@ export interface FileRoutesById {
   '/_app/campaigns': typeof AppCampaignsRouteWithChildren
   '/_app/customers': typeof AppCustomersRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/insights': typeof AppInsightsRoute
   '/_app/segments': typeof AppSegmentsRoute
   '/_app/campaigns/$id': typeof AppCampaignsIdRoute
 }
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/campaigns'
     | '/customers'
     | '/dashboard'
+    | '/insights'
     | '/segments'
     | '/campaigns/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
     | '/campaigns'
     | '/customers'
     | '/dashboard'
+    | '/insights'
     | '/segments'
     | '/campaigns/$id'
   id:
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/_app/campaigns'
     | '/_app/customers'
     | '/_app/dashboard'
+    | '/_app/insights'
     | '/_app/segments'
     | '/_app/campaigns/$id'
   fileRoutesById: FileRoutesById
@@ -196,6 +208,13 @@ declare module '@tanstack/react-router' {
       path: '/segments'
       fullPath: '/segments'
       preLoaderRoute: typeof AppSegmentsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/insights': {
+      id: '/_app/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof AppInsightsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -261,6 +280,7 @@ interface AppRouteChildren {
   AppCampaignsRoute: typeof AppCampaignsRouteWithChildren
   AppCustomersRoute: typeof AppCustomersRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppInsightsRoute: typeof AppInsightsRoute
   AppSegmentsRoute: typeof AppSegmentsRoute
 }
 
@@ -270,6 +290,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCampaignsRoute: AppCampaignsRouteWithChildren,
   AppCustomersRoute: AppCustomersRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppInsightsRoute: AppInsightsRoute,
   AppSegmentsRoute: AppSegmentsRoute,
 }
 

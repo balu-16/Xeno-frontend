@@ -18,7 +18,6 @@ import {
 import { useEffect, useRef, useState } from "react";
 import type { Channel } from "../lib/contracts";
 import { toast } from "sonner";
-import { CampaignDetailDialog } from "@/components/CampaignDetailDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { EmptyState, ErrorState } from "@/components/QueryState";
 import { TableSkeleton } from "@/components/Skeleton";
@@ -39,19 +38,10 @@ const channels: Array<{
   label: string;
   icon: typeof Mail;
 }> = [
-  { value: "WHATSAPP", label: "WhatsApp", icon: MessageSquare },
-  { value: "SMS", label: "SMS", icon: Phone },
   { value: "EMAIL", label: "Email", icon: Mail },
+  { value: "SMS", label: "SMS", icon: Phone },
+  { value: "WHATSAPP", label: "WhatsApp", icon: MessageSquare },
   { value: "RCS", label: "RCS", icon: Radio },
-];
-
-const steps = [
-  "Segment",
-  "Channel",
-  "Message",
-  "Schedule",
-  "Audience",
-  "Launch",
 ];
 
 function Campaigns() {
@@ -59,22 +49,12 @@ function Campaigns() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(Boolean(search.segmentId));
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(
-    null,
-  );
-  const [step, setStep] = useState(0);
-  const [segmentId, setSegmentId] = useState(search.segmentId ?? "");
-  const [channel, setChannel] = useState<Channel>("EMAIL");
+
+  // Simple form state
   const [name, setName] = useState("New Campaign");
-  const [subject, setSubject] = useState("A special offer for {{first_name}}");
-  const [message, setMessage] = useState(
-    "Hi {{first_name}}, we selected something special for you. Explore it today.",
-  );
-  const [draftId, setDraftId] = useState<string>();
-  const [audienceSize, setAudienceSize] = useState<number>();
-  const [confirmLaunch, setConfirmLaunch] = useState(false);
-  const [isScheduled, setIsScheduled] = useState(false);
-  const [scheduledAt, setScheduledAt] = useState("");
+  const [channel, setChannel] = useState<Channel>("EMAIL");
+  const [message, setMessage] = useState("");
+  const [segmentId, setSegmentId] = useState(search.segmentId ?? "");
 
   // Search and filter state
   const [searchInput, setSearchInput] = useState("");
@@ -105,74 +85,48 @@ function Campaigns() {
     queryKey: ["segments"],
     queryFn: () => api.segments(),
   });
-  const prepare = useMutation({
-    mutationFn: async () => {
-      const campaign = await api.createCampaign({
+
+  const create = useMutation({
+    mutationFn: () =>
+      api.createCampaign({
         name,
         segmentId,
         channel,
-        subject: channel === "EMAIL" ? subject : undefined,
+        subject: channel === "EMAIL" ? message.slice(0, 80) : undefined,
         message,
-        scheduledAt:
-          isScheduled && scheduledAt
-            ? new Date(scheduledAt).toISOString()
-            : undefined,
-      });
-      const preview = await api.previewCampaign(campaign.id);
-      return { campaign, preview };
-    },
-    onSuccess: ({ campaign, preview }) => {
-      setDraftId(campaign.id);
-      setAudienceSize(preview.audienceSize);
-      setStep(4);
-      void queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-    },
-  });
-  const launch = useMutation({
-    mutationFn: () => api.launchCampaign(draftId!),
-    onSuccess: async (result) => {
-      toast.success(
-        `Campaign queued for ${result.audienceSize.toLocaleString()} customers`,
-      );
+      }),
+    onSuccess: async (campaign) => {
+      toast.success(`Campaign "${name}" created`);
       await queryClient.invalidateQueries({ queryKey: ["campaigns"] });
-      await navigate({
+      setOpen(false);
+      resetForm();
+      void navigate({
         to: "/campaigns/$id",
-        params: { id: result.campaignId },
+        params: { id: campaign.id },
         search: { segmentId: undefined },
       });
     },
   });
+
   const generateMessage = useMutation({
     mutationFn: async () => {
-      const conversation = await api.createConversation(`Copy for ${name}`);
+      const conv = await api.createConversation(`Copy for ${name}`);
       return api.sendAIMessage(
-        conversation.id,
-        `Draft ${channel} campaign copy for "${name}" targeting the selected segment.`,
+        conv.id,
+        `Write a short, compelling ${channel} marketing message for a campaign called "${name}". Keep it under 160 characters for SMS, or a brief paragraph for email. Use {{first_name}} for personalization.`,
       );
     },
     onSuccess: (result) => {
-      const output = result.toolResult as {
-        subject?: unknown;
-        message?: unknown;
-      };
-      if (typeof output.subject === "string") setSubject(output.subject);
-      if (typeof output.message === "string") setMessage(output.message);
-      else setMessage(result.response);
+      setMessage(result.response);
+      toast.success("AI generated message");
     },
   });
 
-  const reset = () => {
-    setStep(0);
-    setDraftId(undefined);
-    setAudienceSize(undefined);
-    setConfirmLaunch(false);
-    setIsScheduled(false);
-    setScheduledAt("");
+  const resetForm = () => {
     setName("New Campaign");
-    setSubject("A special offer for {{first_name}}");
-    setMessage(
-      "Hi {{first_name}}, we selected something special for you. Explore it today.",
-    );
+    setChannel("EMAIL");
+    setMessage("");
+    setSegmentId(search.segmentId ?? "");
   };
 
   useEffect(() => {
@@ -182,27 +136,7 @@ function Campaigns() {
     }
   }, [search.segmentId]);
 
-  // Listen for custom event from PageActions component
-  useEffect(() => {
-    const handler = () => {
-      reset();
-      setOpen(true);
-    };
-    window.addEventListener("open-campaign-creator", handler);
-    return () => window.removeEventListener("open-campaign-creator", handler);
-  }, []);
-
-  const continueWizard = () => {
-    if (step === 3) {
-      prepare.mutate();
-      return;
-    }
-    if (step === 4) {
-      setStep(5);
-      return;
-    }
-    setStep((value) => Math.min(5, value + 1));
-  };
+  const canSubmit = name.trim() && segmentId && message.trim();
 
   return (
     <div className="px-8 py-8 max-w-[1400px] mx-auto">
@@ -236,7 +170,7 @@ function Campaigns() {
             {!isMember && (
               <button
                 onClick={() => {
-                  reset();
+                  resetForm();
                   setOpen(true);
                 }}
                 className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2"
@@ -286,21 +220,8 @@ function Campaigns() {
       ) : campaigns.data!.data.length === 0 ? (
         <EmptyState
           title="No campaigns yet"
-          description="Create a campaign from a saved segment."
+          description="Click 'Create campaign' above to launch your first campaign."
           illustration="campaigns"
-          action={
-            !isMember ? (
-              <button
-                onClick={() => {
-                  reset();
-                  setOpen(true);
-                }}
-                className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2 mx-auto"
-              >
-                <Plus className="h-4 w-4" /> Create campaign
-              </button>
-            ) : null
-          }
         />
       ) : (
         <div className="bg-white border border-slate-200/70 rounded-xl overflow-x-auto">
@@ -320,7 +241,13 @@ function Campaigns() {
                 <tr
                   key={campaign.id}
                   className="border-b border-slate-50 hover:bg-slate-50/70 cursor-pointer"
-                  onClick={() => setSelectedCampaignId(campaign.id)}
+                  onClick={() =>
+                    navigate({
+                      to: "/campaigns/$id",
+                      params: { id: campaign.id },
+                      search: { segmentId: undefined },
+                    })
+                  }
                 >
                   <td className="px-5 py-4">
                     <span className="font-medium hover:text-indigo-600">
@@ -349,318 +276,141 @@ function Campaigns() {
         </div>
       )}
 
+      {/* ── Create Campaign Drawer ─────────────────────────────────── */}
       <div
         onClick={() => setOpen(false)}
-        className={`fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm transition-opacity ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+        className={`fixed inset-0 z-40 bg-slate-900/30 transition-opacity ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       />
-      <div
-        className={`fixed inset-0 z-50 grid place-items-center px-4 pointer-events-none transition-all ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+      <aside
+        className={`fixed top-0 right-0 bottom-0 z-50 w-[520px] max-w-full bg-white shadow-2xl transition-transform duration-300 overflow-y-auto ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
       >
-        <div
-          className={`${open ? "pointer-events-auto" : "pointer-events-none"} bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-slate-100`}
-        >
-          <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-            <div>
-              <h2 className="font-semibold">Create campaign</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {steps[step]} · Step {step + 1} of 6
-              </p>
+        {/* Header */}
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold">Create campaign</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Fill in the details and launch
+            </p>
+          </div>
+          <button
+            onClick={() => setOpen(false)}
+            className="h-8 w-8 grid place-items-center rounded-md hover:bg-slate-100"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <div className="p-6 space-y-5">
+          {/* Campaign Name */}
+          <label className="block">
+            <span className="text-xs font-medium text-slate-600">
+              Campaign name
+            </span>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Summer Sale 2026"
+              className="mt-1.5 w-full h-10 px-3 rounded-lg border border-slate-200 text-sm outline-none focus:border-indigo-400"
+            />
+          </label>
+
+          {/* Channel Dropdown */}
+          <label className="block">
+            <span className="text-xs font-medium text-slate-600">
+              Channel
+            </span>
+            <select
+              value={channel}
+              onChange={(e) => setChannel(e.target.value as Channel)}
+              className="mt-1.5 w-full h-10 px-3 rounded-lg border border-slate-200 text-sm outline-none focus:border-indigo-400 cursor-pointer appearance-auto bg-white"
+            >
+              {channels.map((ch) => (
+                <option key={ch.value} value={ch.value}>
+                  {ch.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {/* Segment Dropdown */}
+          <label className="block">
+            <span className="text-xs font-medium text-slate-600">
+              Target segment
+            </span>
+            <select
+              value={segmentId}
+              onChange={(e) => setSegmentId(e.target.value)}
+              className="mt-1.5 w-full h-10 px-3 rounded-lg border border-slate-200 text-sm outline-none focus:border-indigo-400 cursor-pointer appearance-auto bg-white"
+            >
+              <option value="">Select a segment</option>
+              {segments.data?.data.map((seg) => (
+                <option key={seg.id} value={seg.id}>
+                  {seg.name} ({seg.audienceSize.toLocaleString()} customers)
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {/* Message with AI */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <span className="text-xs font-medium text-slate-600">
+                Message
+              </span>
+              <button
+                onClick={() => generateMessage.mutate()}
+                disabled={generateMessage.isPending || !name.trim()}
+                className="h-7 px-2.5 rounded-md border border-indigo-200 text-indigo-700 text-[11px] flex items-center gap-1.5 hover:bg-indigo-50 disabled:opacity-50"
+              >
+                <Sparkles className="h-3 w-3" />
+                {generateMessage.isPending ? "Generating..." : "AI Generate"}
+              </button>
             </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="h-8 w-8 grid place-items-center rounded-md hover:bg-slate-100"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-          <div className="px-6 pt-5 flex gap-2">
-            {steps.map((label, index) => (
-              <div key={label} className="flex-1">
-                <div
-                  className={`h-1 rounded-full ${index <= step ? "bg-indigo-600" : "bg-slate-100"}`}
-                />
-                <div className="mt-1 text-[10px] text-slate-400 hidden sm:block">
-                  {label}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="p-6 min-h-[340px]">
-            {step === 0 && (
-              <div>
-                <h3 className="font-medium">1. Select Segment</h3>
-                <p className="text-sm text-slate-500 mt-1 mb-5">
-                  Choose the saved audience this campaign will target.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {segments.data?.data.map((segment) => (
-                    <button
-                      key={segment.id}
-                      onClick={() => setSegmentId(segment.id)}
-                      className={`text-left rounded-xl border-2 p-4 ${
-                        segmentId === segment.id
-                          ? "border-indigo-500 bg-indigo-50/50"
-                          : "border-slate-200"
-                      }`}
-                    >
-                      <div className="font-medium text-sm">{segment.name}</div>
-                      <div className="text-xs text-slate-500 mt-1">
-                        {segment.audienceSize.toLocaleString()} customers
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {step === 1 && (
-              <div>
-                <h3 className="font-medium">2. Select Channel</h3>
-                <p className="text-sm text-slate-500 mt-1 mb-5">
-                  Choose the simulated delivery channel.
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  {channels.map(({ value, label, icon: Icon }) => (
-                    <button
-                      key={value}
-                      onClick={() => setChannel(value)}
-                      className={`text-left rounded-xl border-2 p-4 ${
-                        channel === value
-                          ? "border-indigo-500 bg-indigo-50/50"
-                          : "border-slate-200"
-                      }`}
-                    >
-                      <Icon className="h-5 w-5 text-indigo-600 mb-3" />
-                      <div className="font-medium text-sm">{label}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {step === 2 && (
-              <div>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-medium">
-                      3. Generate or Write Message
-                    </h3>
-                    <p className="text-sm text-slate-500 mt-1">
-                      Create channel-appropriate content.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => generateMessage.mutate()}
-                    className="h-9 px-3 rounded-lg border border-indigo-200 text-indigo-700 text-xs flex items-center gap-2"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" />
-                    {generateMessage.isPending
-                      ? "Generating..."
-                      : "Generate with AI"}
-                  </button>
-                </div>
-                <div className="mt-5 space-y-3">
-                  <input
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    placeholder="Campaign name"
-                    className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm"
-                  />
-                  {channel === "EMAIL" && (
-                    <input
-                      value={subject}
-                      onChange={(event) => setSubject(event.target.value)}
-                      placeholder="Subject"
-                      className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm"
-                    />
-                  )}
-                  <textarea
-                    value={message}
-                    onChange={(event) => setMessage(event.target.value)}
-                    rows={6}
-                    className="w-full p-3 rounded-lg border border-slate-200 text-sm resize-none"
-                  />
-                </div>
-              </div>
-            )}
-            {step === 3 && (
-              <div>
-                <h3 className="font-medium">4. Schedule Campaign</h3>
-                <p className="text-sm text-slate-500 mt-1 mb-5">
-                  Choose when to send this campaign, or launch immediately.
-                </p>
-                <div className="space-y-4">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isScheduled}
-                      onChange={(e) => {
-                        setIsScheduled(e.target.checked);
-                        if (!e.target.checked) setScheduledAt("");
-                      }}
-                      className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="text-sm font-medium">
-                      Schedule for later
-                    </span>
-                  </label>
-                  {isScheduled && (
-                    <div className="ml-7">
-                      <label className="block text-sm text-slate-600 mb-1">
-                        Send at
-                      </label>
-                      <div className="relative max-w-xs">
-                        <Calendar className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                        <input
-                          type="datetime-local"
-                          value={scheduledAt}
-                          onChange={(e) => setScheduledAt(e.target.value)}
-                          min={new Date(Date.now() + 5 * 60_000)
-                            .toISOString()
-                            .slice(0, 16)}
-                          className="w-full h-10 pl-9 pr-3 rounded-lg border border-slate-200 text-sm outline-none focus:border-indigo-400"
-                        />
-                      </div>
-                      {scheduledAt && new Date(scheduledAt) <= new Date() && (
-                        <p className="mt-1 text-xs text-rose-600">
-                          Scheduled time must be in the future.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  {!isScheduled && (
-                    <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-4 text-sm text-indigo-800">
-                      The campaign will be queued for immediate delivery.
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            {step === 4 && (
-              <div className="text-center py-8">
-                <div className="text-xs uppercase tracking-wider text-slate-400">
-                  5. Audience Preview
-                </div>
-                <div className="mt-4 text-5xl font-semibold tracking-tight">
-                  {audienceSize?.toLocaleString() ?? "—"}
-                </div>
-                <div className="mt-2 text-sm text-slate-500">
-                  customers match the selected segment
-                </div>
-                <div className="mt-6 max-w-md mx-auto rounded-xl bg-amber-50 border border-amber-100 p-4 text-sm text-amber-800">
-                  Audience membership is evaluated and snapshotted when the
-                  campaign launches.
-                </div>
-              </div>
-            )}
-            {step === 5 && (
-              <div>
-                <h3 className="font-medium">6. Launch Campaign</h3>
-                <p className="text-sm text-slate-500 mt-1 mb-5">
-                  Confirm the campaign before queueing delivery jobs.
-                </p>
-                <div className="rounded-xl border border-slate-200 divide-y divide-slate-100">
-                  {[
-                    ["Campaign", name],
-                    ["Channel", channel],
-                    [
-                      "Audience",
-                      `${audienceSize?.toLocaleString() ?? 0} customers`,
-                    ],
-                    [
-                      "Subject",
-                      channel === "EMAIL" ? subject : "Not applicable",
-                    ],
-                    [
-                      "Schedule",
-                      isScheduled && scheduledAt
-                        ? new Date(scheduledAt).toLocaleString()
-                        : "Immediate",
-                    ],
-                  ].map(([label, value]) => (
-                    <div
-                      key={label}
-                      className="flex justify-between p-4 text-sm"
-                    >
-                      <span className="text-slate-500">{label}</span>
-                      <span className="font-medium">{value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            {step === 5 && (
-              <div className="mt-4 rounded-xl bg-rose-50 border border-rose-100 p-4">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={confirmLaunch}
-                    onChange={(e) => setConfirmLaunch(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span className="text-sm text-rose-800">
-                    I confirm this campaign is ready to launch. This will send
-                    messages to{" "}
-                    <strong>{audienceSize?.toLocaleString() ?? 0}</strong>{" "}
-                    customers.
-                  </span>
-                </label>
-              </div>
-            )}
-            {prepare.error && (
-              <p className="mt-4 text-sm text-rose-600">
-                {prepare.error.message}
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={5}
+              placeholder={
+                channel === "SMS"
+                  ? "Keep it short — under 160 characters. Use {{first_name}} to personalize."
+                  : "Write your message here. Use {{first_name}} to personalize."
+              }
+              className="w-full p-3 rounded-lg border border-slate-200 text-sm outline-none focus:border-indigo-400 resize-none"
+            />
+            <div className="mt-1 flex items-center justify-between">
+              <span className="text-[11px] text-slate-400">
+                Use {"{{first_name}}"} for personalization
+              </span>
+              {channel === "SMS" && (
+                <span
+                  className={`text-[11px] ${message.length > 160 ? "text-rose-500" : "text-slate-400"}`}
+                >
+                  {message.length}/160
+                </span>
+              )}
+            </div>
+            {generateMessage.error && (
+              <p className="mt-1 text-xs text-rose-600">
+                {generateMessage.error.message}
               </p>
-            )}
-            {launch.error && (
-              <p className="mt-4 text-sm text-rose-600">
-                {launch.error.message}
-              </p>
-            )}
-          </div>
-          <div className="p-6 border-t border-slate-100 flex items-center justify-between">
-            <button
-              onClick={() => setStep((value) => Math.max(0, value - 1))}
-              disabled={step === 0 || Boolean(draftId)}
-              className="h-9 px-4 rounded-lg text-sm text-slate-600 flex items-center gap-2 disabled:opacity-40"
-            >
-              <ArrowLeft className="h-4 w-4" /> Back
-            </button>
-            {step < 5 ? (
-              <button
-                onClick={continueWizard}
-                disabled={
-                  prepare.isPending ||
-                  (step === 0 && !segmentId) ||
-                  (step === 2 && (!name.trim() || !message.trim())) ||
-                  (step === 3 &&
-                    isScheduled &&
-                    (!scheduledAt || new Date(scheduledAt) <= new Date()))
-                }
-                className="h-9 px-4 rounded-lg bg-slate-950 text-white text-sm flex items-center gap-2 disabled:opacity-40"
-              >
-                {prepare.isPending
-                  ? "Preparing..."
-                  : step === 3
-                    ? "Preview audience"
-                    : "Continue"}
-                <ArrowRight className="h-4 w-4" />
-              </button>
-            ) : (
-              <button
-                onClick={() => launch.mutate()}
-                disabled={launch.isPending || !confirmLaunch}
-                className="h-10 px-5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium flex items-center gap-2 disabled:opacity-50"
-              >
-                <Check className="h-4 w-4" />{" "}
-                {launch.isPending ? "Queueing..." : "Launch campaign"}
-              </button>
             )}
           </div>
         </div>
-      </div>
-      <CampaignDetailDialog
-        campaignId={selectedCampaignId}
-        onClose={() => setSelectedCampaignId(null)}
-      />
+
+        {/* Footer */}
+        <div className="p-6 border-t border-slate-100">
+          <button
+            onClick={() => create.mutate()}
+            disabled={!canSubmit || create.isPending}
+            className="w-full h-11 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {create.isPending ? "Creating..." : "Create campaign"}
+          </button>
+        </div>
+      </aside>
     </div>
   );
 }

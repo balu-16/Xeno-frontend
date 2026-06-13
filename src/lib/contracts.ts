@@ -262,3 +262,144 @@ export const queueNames = {
   receiptProcessing: "receipt-processing",
   analyticsRefresh: "analytics-refresh",
 } as const;
+
+// ── AI Insights ──────────────────────────────────────────────────────────────
+
+export const insightTypeSchema = z.enum([
+  "REVENUE",
+  "CUSTOMER",
+  "CAMPAIGN",
+  "SEGMENT",
+  "CHURN",
+  "DELIVERY",
+  "CONVERSION",
+  "OPPORTUNITY",
+  "ANOMALY",
+  "PREDICTION",
+]);
+export type InsightType = z.infer<typeof insightTypeSchema>;
+
+export const insightPrioritySchema = z.enum([
+  "CRITICAL",
+  "HIGH",
+  "MEDIUM",
+  "LOW",
+]);
+export type InsightPriority = z.infer<typeof insightPrioritySchema>;
+
+export const insightStatusSchema = z.enum([
+  "ACTIVE",
+  "DISMISSED",
+  "COMPLETED",
+  "EXPIRED",
+]);
+export type InsightStatus = z.infer<typeof insightStatusSchema>;
+
+export const insightActionTypeSchema = z.enum([
+  "CREATE_CAMPAIGN",
+  "CREATE_SEGMENT",
+  "ADJUST_BUDGET",
+  "PAUSE_CAMPAIGN",
+  "SEND_ALERT",
+  "UPDATE_RULES",
+]);
+export type InsightActionType = z.infer<typeof insightActionTypeSchema>;
+
+export const insightActionStatusSchema = z.enum([
+  "PENDING",
+  "EXECUTING",
+  "COMPLETED",
+  "FAILED",
+]);
+export type InsightActionStatus = z.infer<typeof insightActionStatusSchema>;
+
+export type ConfidenceFactor = {
+  label: string;
+  score: number;
+  weight: number;
+};
+
+export type InsightActionView = {
+  id: string;
+  type: InsightActionType;
+  label: string;
+  description: string;
+  status: InsightActionStatus;
+  estimatedImpact: string | null;
+  createdAt: string;
+};
+
+export type InsightOutcomeView = {
+  metric: string;
+  before: number;
+  after: number;
+  changePercent: number;
+};
+
+export type AIInsightView = {
+  id: string;
+  type: InsightType;
+  priority: InsightPriority;
+  status: InsightStatus;
+  title: string;
+  summary: string;
+  recommendation: string;
+  confidence: number;
+  impact: number;
+  estimatedImpact: string | null;
+  confidenceFactors: ConfidenceFactor[];
+  actions: InsightActionView[];
+  outcome: InsightOutcomeView | null;
+  generatedAt: string;
+  updatedAt: string;
+};
+
+export type ExecutiveScoreView = {
+  overall: number;
+  engagement: number;
+  delivery: number;
+  revenue: number;
+  retention: number;
+  calculatedAt: string;
+};
+
+export type InsightCorrelationView = {
+  id: string;
+  sourceInsightId: string;
+  targetInsightId: string;
+  strength: number;
+  description: string;
+  createdAt: string;
+};
+
+export type DriftMetricsView = {
+  id: string;
+  insightId: string;
+  metric: string;
+  baseline: number;
+  current: number;
+  driftPercent: number;
+  direction: "INCREASING" | "DECREASING" | "STABLE";
+  measuredAt: string;
+};
+
+export type CampaignSimulationView = {
+  id: string;
+  insightId: string;
+  segmentId: string;
+  channel: Channel;
+  estimatedReach: number;
+  estimatedConversion: number;
+  estimatedRevenue: number;
+  confidence: number;
+  simulatedAt: string;
+};
+
+export type ExecutiveSummaryView = {
+  activeInsights: number;
+  criticalInsights: number;
+  avgConfidence: number;
+  executiveScore: number;
+  topInsights: AIInsightView[];
+  generatedAt: string;
+};

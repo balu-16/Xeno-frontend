@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Bot, Plus, Sparkles, Target, Users, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   segmentRuleGroupSchema,
   type SegmentRuleGroup,
@@ -30,12 +30,13 @@ function Segments() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [prompt, setPrompt] = useState(
-    "Find high-value shoppers who have not ordered in 30 days",
-  );
-  const [name, setName] = useState("AI Generated Segment");
-  const [rules, setRules] = useState<SegmentRuleGroup>(defaultRules);
+
+  // Simple form state
+  const [name, setName] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const [rules, setRules] = useState<SegmentRuleGroup | null>(null);
   const [audienceSize, setAudienceSize] = useState<number>();
+
   const auth = useQuery({
     queryKey: ["auth", "me"],
     queryFn: api.me,
@@ -44,10 +45,12 @@ function Segments() {
   });
   const role = auth.data?.user?.role;
   const canManage = role === "ADMIN" || role === "MANAGER";
+
   const query = useQuery({
     queryKey: ["segments"],
     queryFn: () => api.segments(),
   });
+
   const generate = useMutation({
     mutationFn: async () => {
       const conversation = await api.createConversation(prompt.slice(0, 70));
@@ -61,22 +64,26 @@ function Segments() {
       const size = (result.toolResult as { audienceSize?: unknown })
         .audienceSize;
       setAudienceSize(typeof size === "number" ? size : undefined);
-      setName(prompt.slice(0, 60));
-      toast.success("AI generated validated segment rules");
+      if (!name.trim()) setName(prompt.slice(0, 60));
+      toast.success("AI generated segment rules");
     },
   });
+
   const preview = useMutation({
-    mutationFn: () => api.previewSegment(rules),
+    mutationFn: () => api.previewSegment(rules!),
     onSuccess: (result) => setAudienceSize(result.audienceSize),
   });
+
   const create = useMutation({
-    mutationFn: () => api.createSegment({ name, rules }),
+    mutationFn: () => api.createSegment({ name, rules: rules! }),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["segments"] });
       setOpen(false);
+      resetForm();
       toast.success("Segment saved");
     },
   });
+
   const updateName = useMutation({
     mutationFn: ({ id, name }: { id: string; name: string }) =>
       api.updateSegmentName(id, name),
@@ -86,12 +93,14 @@ function Segments() {
     },
   });
 
-  // Listen for custom event from PageActions component
-  useEffect(() => {
-    const handler = () => setOpen(true);
-    window.addEventListener("open-segment-creator", handler);
-    return () => window.removeEventListener("open-segment-creator", handler);
-  }, []);
+  const resetForm = () => {
+    setName("");
+    setPrompt("");
+    setRules(null);
+    setAudienceSize(undefined);
+  };
+
+  const canSubmit = name.trim() && rules !== null;
 
   return (
     <div className="px-8 py-8 max-w-[1400px] mx-auto">
@@ -101,7 +110,10 @@ function Segments() {
         action={
           canManage ? (
             <button
-              onClick={() => setOpen(true)}
+              onClick={() => {
+                resetForm();
+                setOpen(true);
+              }}
               className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2"
             >
               <Sparkles className="h-4 w-4" /> Generate segment
@@ -133,18 +145,8 @@ function Segments() {
       ) : query.data!.data.length === 0 ? (
         <EmptyState
           title="No segments yet"
-          description="Generate your first target audience with AI."
+          description="Click 'Generate segment' above to create your first audience with AI."
           illustration="segments"
-          action={
-            canManage ? (
-              <button
-                onClick={() => setOpen(true)}
-                className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2 mx-auto"
-              >
-                <Sparkles className="h-4 w-4" /> Generate segment
-              </button>
-            ) : null
-          }
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -170,8 +172,8 @@ function Segments() {
                 {segment.audienceSize.toLocaleString()}
               </div>
               <div className="text-xs text-slate-500">matching customers</div>
-              <div className="mt-4 rounded-lg bg-slate-50 p-3 font-mono text-[11px] text-slate-600 line-clamp-3">
-                {JSON.stringify(segment.rules)}
+              <div className="mt-4 rounded-lg bg-slate-50 p-3 text-[12px] text-slate-600 line-clamp-3">
+                {segment.description || "No description"}
               </div>
               {canManage && (
                 <button
@@ -191,22 +193,25 @@ function Segments() {
         </div>
       )}
 
+      {/* ── Generate Segment Drawer ───────────────────────────────── */}
       <div
         onClick={() => setOpen(false)}
         className={`fixed inset-0 z-40 bg-slate-900/30 transition-opacity ${open ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       />
       <aside
-        className={`fixed top-0 right-0 bottom-0 z-50 w-[560px] max-w-full bg-white shadow-2xl transition-transform duration-300 overflow-y-auto ${
+        className={`fixed top-0 right-0 bottom-0 z-50 w-[520px] max-w-full bg-white shadow-2xl transition-transform duration-300 overflow-y-auto ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
+        {/* Drawer Header */}
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="font-semibold flex items-center gap-2">
-              <Bot className="h-4 w-4 text-indigo-600" /> AI Segment Generator
+              <Bot className="h-4 w-4 text-indigo-600" /> Generate Segment
             </h2>
             <p className="text-xs text-slate-500 mt-1">
-              Natural language becomes validated JSON rules, never SQL.
+              Describe your audience in plain language — AI converts it to
+              validated rules.
             </p>
           </div>
           <button
@@ -216,80 +221,114 @@ function Segments() {
             <X className="h-4 w-4" />
           </button>
         </div>
+
+        {/* Drawer Body */}
         <div className="p-6 space-y-5">
-          <label className="block">
-            <span className="text-xs font-medium text-slate-600">
-              Describe the audience
-            </span>
-            <textarea
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-              rows={4}
-              className="mt-1.5 w-full rounded-lg border border-slate-200 p-3 text-sm outline-none focus:border-indigo-400"
-            />
-          </label>
-          <button
-            onClick={() => generate.mutate()}
-            disabled={generate.isPending}
-            className="h-10 px-4 rounded-lg bg-slate-950 text-white text-sm flex items-center gap-2 disabled:opacity-50"
-          >
-            <Sparkles className="h-4 w-4" />
-            {generate.isPending
-              ? "Classifying and generating..."
-              : "Generate with AI"}
-          </button>
-          {generate.error && (
-            <p className="text-sm text-rose-600">{generate.error.message}</p>
-          )}
+          {/* Segment Name */}
           <label className="block">
             <span className="text-xs font-medium text-slate-600">
               Segment name
             </span>
             <input
               value={name}
-              onChange={(event) => setName(event.target.value)}
-              className="mt-1.5 h-10 w-full rounded-lg border border-slate-200 px-3 text-sm"
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. High-value dormant customers"
+              className="mt-1.5 w-full h-10 px-3 rounded-lg border border-slate-200 text-sm outline-none focus:border-indigo-400"
             />
           </label>
+
+          {/* AI Prompt */}
           <div>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-1.5">
               <span className="text-xs font-medium text-slate-600">
-                Validated rules
+                Describe the audience
               </span>
               <button
-                onClick={() => setRules(defaultRules)}
-                className="text-xs text-indigo-600"
+                onClick={() => generate.mutate()}
+                disabled={generate.isPending || !prompt.trim()}
+                className="h-7 px-2.5 rounded-md border border-indigo-200 text-indigo-700 text-[11px] flex items-center gap-1.5 hover:bg-indigo-50 disabled:opacity-50"
               >
-                Reset
+                <Sparkles className="h-3 w-3" />
+                {generate.isPending ? "Generating..." : "AI Generate"}
               </button>
             </div>
-            <pre className="mt-1.5 rounded-xl bg-slate-950 text-slate-200 p-4 text-xs overflow-x-auto whitespace-pre-wrap">
-              {JSON.stringify(rules, null, 2)}
-            </pre>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={3}
+              placeholder="e.g. Customers who spent over $500 but haven't ordered in 30 days"
+              className="w-full p-3 rounded-lg border border-slate-200 text-sm outline-none focus:border-indigo-400 resize-none"
+            />
+            {generate.error && (
+              <p className="mt-1 text-xs text-rose-600">
+                {generate.error.message}
+              </p>
+            )}
           </div>
-          <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-4 flex items-center gap-3">
-            <Users className="h-5 w-5 text-indigo-600" />
-            <div>
-              <div className="text-xs text-indigo-600">Audience preview</div>
-              <div className="font-semibold text-indigo-950">
-                {audienceSize === undefined
-                  ? "Not calculated"
-                  : `${audienceSize.toLocaleString()} customers`}
+
+          {/* Generated Rules Preview */}
+          {rules && (
+            <>
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-600">
+                    Generated rules
+                  </span>
+                  <button
+                    onClick={() => {
+                      setRules(null);
+                      setAudienceSize(undefined);
+                    }}
+                    className="text-xs text-slate-400 hover:text-slate-600"
+                  >
+                    Clear
+                  </button>
+                </div>
+                <pre className="mt-1.5 rounded-xl bg-slate-950 text-slate-200 p-4 text-xs overflow-x-auto whitespace-pre-wrap">
+                  {JSON.stringify(rules, null, 2)}
+                </pre>
+                <p className="mt-2 text-xs text-slate-500">
+                  {rules.conditions.map((c) =>
+                    "field" in c
+                      ? `${c.field} ${c.operator} ${c.value}`
+                      : "nested group"
+                  ).join(` ${rules.operator} `)}
+                </p>
               </div>
-            </div>
-            <button
-              onClick={() => preview.mutate()}
-              className="ml-auto text-xs font-medium text-indigo-700"
-            >
-              Refresh
-            </button>
-          </div>
+
+              {/* Audience Preview */}
+              <div className="rounded-xl bg-indigo-50 border border-indigo-100 p-4 flex items-center gap-3">
+                <Users className="h-5 w-5 text-indigo-600 shrink-0" />
+                <div className="flex-1">
+                  <div className="text-xs text-indigo-600">
+                    Audience preview
+                  </div>
+                  <div className="font-semibold text-indigo-950">
+                    {audienceSize === undefined
+                      ? "Not calculated"
+                      : `${audienceSize.toLocaleString()} customers`}
+                  </div>
+                </div>
+                <button
+                  onClick={() => preview.mutate()}
+                  disabled={preview.isPending}
+                  className="text-xs font-medium text-indigo-700 hover:underline"
+                >
+                  {preview.isPending ? "..." : "Refresh"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Drawer Footer */}
+        <div className="p-6 border-t border-slate-100">
           <button
             onClick={() => create.mutate()}
-            disabled={!canManage || create.isPending || !name.trim()}
+            disabled={!canSubmit || create.isPending}
             className="w-full h-11 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <Plus className="h-4 w-4" />{" "}
+            <Plus className="h-4 w-4" />
             {create.isPending ? "Saving..." : "Save segment"}
           </button>
         </div>

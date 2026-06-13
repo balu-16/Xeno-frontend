@@ -463,7 +463,7 @@ function Dashboard() {
 }
 
 function Page({ children }: { children: React.ReactNode }) {
-  return <div className="px-8 py-8 max-w-[1500px] mx-auto">{children}</div>;
+  return <div className="px-8 py-8 max-w-375 mx-auto">{children}</div>;
 }
 
 function StatCard({
@@ -618,7 +618,7 @@ function OnboardingChecklist() {
   ];
 
   return (
-    <div className="mt-4 bg-gradient-to-r from-indigo-50 via-blue-50 to-sky-50 border border-indigo-100 rounded-xl p-5">
+    <div className="mt-4 bg-linear-to-r from-indigo-50 via-blue-50 to-sky-50 border border-indigo-100 rounded-xl p-5">
       <div className="flex items-start justify-between">
         <div>
           <h3 className="font-semibold text-indigo-900">Getting Started</h3>
