@@ -13,9 +13,13 @@ import type {
   ExecutiveSummaryView,
 } from "./contracts";
 
-const API_URL =
-  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ??
-  (import.meta.env.PROD ? "/api/v1" : "http://localhost:3000/api/v1");
+const API_URL = (() => {
+  const raw =
+    (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, "") ??
+    (import.meta.env.PROD ? "/api/v1" : "http://localhost:3000/api/v1");
+  // Fix malformed protocol slashes: "https:/example.com" → "https://example.com"
+  return raw.replace(/^(https?):\/([^/])/, "$1://$2");
+})();
 
 export class ApiError extends Error {
   constructor(
