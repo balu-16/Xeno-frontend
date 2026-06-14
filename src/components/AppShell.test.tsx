@@ -86,6 +86,7 @@ describe("AppShell", () => {
         name: "Test User",
         email: "test@test.com",
         role: "ADMIN",
+        approvalStatus: "APPROVED",
       },
     });
     renderWithProviders(<AppShell />);
@@ -106,6 +107,7 @@ describe("AppShell", () => {
         name: "John Doe",
         email: "john@example.com",
         role: "ADMIN",
+        approvalStatus: "APPROVED",
       },
     });
     renderWithProviders(<AppShell />);
@@ -115,7 +117,7 @@ describe("AppShell", () => {
     expect(screen.getByText("john@example.com")).toBeInTheDocument();
   });
 
-  it.each(["ADMIN", "MANAGER", "MEMBER"] as const)(
+  it.each(["ADMIN", "MANAGER"] as const)(
     "shows role badge for %s",
     async (role) => {
       mockMe.mockResolvedValue({
@@ -124,6 +126,7 @@ describe("AppShell", () => {
           name: "Test User",
           email: "test@test.com",
           role,
+          approvalStatus: "APPROVED",
         },
       });
       renderWithProviders(<AppShell />);

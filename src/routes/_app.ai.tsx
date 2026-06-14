@@ -469,43 +469,104 @@ function AIHistory() {
               </div>
             </>
           ) : (
-            <div className="h-full overflow-y-auto p-6 flex flex-col items-center justify-center">
-              <div className="w-full max-w-2xl space-y-6">
-                <div className="text-center space-y-2">
-                  <Bot className="h-10 w-10 mx-auto text-indigo-400" />
-                  <h3 className="text-lg font-semibold text-slate-800">
-                    What can I help you with?
-                  </h3>
-                  <p className="text-sm text-slate-500">
-                    Ask me anything about your campaigns, customers, segments,
-                    or analytics.
-                  </p>
+            <div className="flex flex-col h-full">
+              <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center justify-center">
+                <div className="w-full max-w-2xl space-y-6">
+                  <div className="text-center space-y-2">
+                    <Bot className="h-10 w-10 mx-auto text-indigo-400" />
+                    <h3 className="text-lg font-semibold text-slate-800">
+                      What can I help you with?
+                    </h3>
+                    <p className="text-sm text-slate-500">
+                      Ask me anything about your campaigns, customers, segments,
+                      or analytics.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {AI_SKILLS.map((skill) => (
+                      <div
+                        key={skill.category}
+                        className="rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 hover:shadow-sm transition-all"
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-lg">{skill.icon}</span>
+                          <span className="text-sm font-semibold text-slate-700">
+                            {skill.category}
+                          </span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {skill.suggestions.map((suggestion) => (
+                            <button
+                              key={suggestion}
+                              onClick={() => {
+                                create.mutate(undefined, {
+                                  onSuccess: async (result) => {
+                                    await queryClient.invalidateQueries({
+                                      queryKey: ["ai", "conversations"],
+                                    });
+                                    setSelectedId(result.id);
+                                    setTimeout(() => {
+                                      send.mutate(suggestion);
+                                    }, 100);
+                                  },
+                                });
+                              }}
+                              className="w-full text-left text-xs text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg px-2.5 py-1.5 transition-colors truncate"
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {AI_SKILLS.map((skill) => (
-                    <div
-                      key={skill.category}
-                      className="rounded-xl border border-slate-200 bg-white p-4 hover:border-indigo-300 hover:shadow-sm transition-all"
-                    >
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-lg">{skill.icon}</span>
-                        <span className="text-sm font-semibold text-slate-700">
-                          {skill.category}
-                        </span>
-                      </div>
-                      <div className="space-y-1.5">
-                        {skill.suggestions.map((suggestion) => (
-                          <button
-                            key={suggestion}
-                            onClick={() => setInput(suggestion)}
-                            className="w-full text-left text-xs text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg px-2.5 py-1.5 transition-colors truncate"
-                          >
-                            {suggestion}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+              </div>
+              <div className="p-4 border-t border-slate-100">
+                <div className="relative max-w-2xl mx-auto">
+                  <input
+                    value={input}
+                    onChange={(event) => setInput(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && input.trim()) {
+                        create.mutate(undefined, {
+                          onSuccess: async (result) => {
+                            await queryClient.invalidateQueries({
+                              queryKey: ["ai", "conversations"],
+                            });
+                            setSelectedId(result.id);
+                            // Wait for conversation to be selected, then send
+                            setTimeout(() => {
+                              send.mutate(input.trim());
+                            }, 100);
+                          },
+                        });
+                      }
+                    }}
+                    placeholder='Ask "Why did Summer Sale fail?"'
+                    className="w-full h-11 rounded-full border border-slate-200 bg-slate-50 pl-4 pr-12 text-sm outline-none focus:border-indigo-400"
+                  />
+                  <button
+                    onClick={() => {
+                      if (input.trim()) {
+                        create.mutate(undefined, {
+                          onSuccess: async (result) => {
+                            await queryClient.invalidateQueries({
+                              queryKey: ["ai", "conversations"],
+                            });
+                            setSelectedId(result.id);
+                            setTimeout(() => {
+                              send.mutate(input.trim());
+                            }, 100);
+                          },
+                        });
+                      }
+                    }}
+                    disabled={!input.trim()}
+                    className="absolute right-1.5 top-1.5 h-8 w-8 rounded-full bg-indigo-600 text-white grid place-items-center disabled:opacity-50"
+                  >
+                    <Send className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </div>
             </div>

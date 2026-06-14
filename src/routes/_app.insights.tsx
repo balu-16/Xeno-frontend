@@ -71,6 +71,8 @@ function Insights() {
   const [typeFilter, setTypeFilter] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("ACTIVE");
+  const [dismissingId, setDismissingId] = useState<string | null>(null);
+  const [completingId, setCompletingId] = useState<string | null>(null);
 
   // Poll status every 5s while generating, every 60s otherwise
   const status = useQuery({
@@ -103,16 +105,30 @@ function Insights() {
   });
 
   const dismiss = useMutation({
-    mutationFn: (id: string) => api.dismissInsight(id),
+    mutationFn: (id: string) => {
+      setDismissingId(id);
+      return api.dismissInsight(id);
+    },
     onSuccess: async () => {
+      setDismissingId(null);
       await queryClient.invalidateQueries({ queryKey: ["insights"] });
+    },
+    onError: () => {
+      setDismissingId(null);
     },
   });
 
   const complete = useMutation({
-    mutationFn: (id: string) => api.completeInsight(id),
+    mutationFn: (id: string) => {
+      setCompletingId(id);
+      return api.completeInsight(id);
+    },
     onSuccess: async () => {
+      setCompletingId(null);
       await queryClient.invalidateQueries({ queryKey: ["insights"] });
+    },
+    onError: () => {
+      setCompletingId(null);
     },
   });
 
@@ -278,8 +294,8 @@ function Insights() {
               insight={insight}
               onDismiss={() => dismiss.mutate(insight.id)}
               onComplete={() => complete.mutate(insight.id)}
-              isDismissing={dismiss.isPending}
-              isCompleting={complete.isPending}
+              isDismissing={dismissingId === insight.id}
+              isCompleting={completingId === insight.id}
             />
           ))}
         </div>
@@ -479,19 +495,27 @@ function InsightCard({
         <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
           <button
             onClick={onDismiss}
-            disabled={isDismissing}
+            disabled={isDismissing || isCompleting}
             className="flex-1 h-9 rounded-lg border border-slate-200 text-sm text-slate-600 flex items-center justify-center gap-2 hover:bg-slate-50 disabled:opacity-50"
           >
-            <X className="h-3.5 w-3.5" />
-            Dismiss
+            {isDismissing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <X className="h-3.5 w-3.5" />
+            )}
+            {isDismissing ? "Dismissing..." : "Dismiss"}
           </button>
           <button
             onClick={onComplete}
-            disabled={isCompleting}
+            disabled={isCompleting || isDismissing}
             className="flex-1 h-9 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center justify-center gap-2 disabled:opacity-50"
           >
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            Mark Complete
+            {isCompleting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <CheckCircle2 className="h-3.5 w-3.5" />
+            )}
+            {isCompleting ? "Completing..." : "Mark Complete"}
           </button>
         </div>
       )}

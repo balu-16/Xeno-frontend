@@ -6,6 +6,7 @@ import {
   Calendar,
   Check,
   Download,
+  Loader2,
   Mail,
   MessageSquare,
   Phone,
@@ -74,8 +75,7 @@ function Campaigns() {
     queryFn: api.me,
     staleTime: 5 * 60 * 1000,
   });
-  const userRole: User["role"] = auth.data?.user.role ?? "MEMBER";
-  const isMember = userRole === "MEMBER";
+  const userRole: User["role"] = auth.data?.user.role ?? "MANAGER";
 
   const campaigns = useQuery({
     queryKey: ["campaigns", searchQuery, statusFilter],
@@ -167,17 +167,15 @@ function Campaigns() {
                 <Download className="h-4 w-4" /> Export CSV
               </button>
             )}
-            {!isMember && (
-              <button
-                onClick={() => {
-                  resetForm();
-                  setOpen(true);
-                }}
-                className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" /> Create campaign
-              </button>
-            )}
+            <button
+              onClick={() => {
+                resetForm();
+                setOpen(true);
+              }}
+              className="h-9 px-4 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" /> Create campaign
+            </button>
           </div>
         }
       />
@@ -365,7 +363,11 @@ function Campaigns() {
                 disabled={generateMessage.isPending || !name.trim()}
                 className="h-7 px-2.5 rounded-md border border-indigo-200 text-indigo-700 text-[11px] flex items-center gap-1.5 hover:bg-indigo-50 disabled:opacity-50"
               >
-                <Sparkles className="h-3 w-3" />
+                {generateMessage.isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3" />
+                )}
                 {generateMessage.isPending ? "Generating..." : "AI Generate"}
               </button>
             </div>
@@ -407,6 +409,11 @@ function Campaigns() {
             disabled={!canSubmit || create.isPending}
             className="w-full h-11 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"
           >
+            {create.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
             {create.isPending ? "Creating..." : "Create campaign"}
           </button>
         </div>

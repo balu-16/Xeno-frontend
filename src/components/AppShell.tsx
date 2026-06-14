@@ -10,6 +10,7 @@ import {
   Sparkles,
   Target,
   TrendingUp,
+  UserCog,
   Users,
   X,
 } from "lucide-react";
@@ -36,14 +37,20 @@ const allNavigation = [
   { to: "/ai", label: "AI Copilot", icon: Bot },
 ] as const;
 
-function getNavigation(_role: User["role"]) {
+const adminOnlyNavigation = [
+  { to: "/managers", label: "Managers", icon: UserCog },
+] as const;
+
+function getNavigation(role: User["role"]) {
+  if (role === "ADMIN") {
+    return [...allNavigation, ...adminOnlyNavigation];
+  }
   return allNavigation;
 }
 
 const roleBadgeStyles: Record<User["role"], string> = {
   ADMIN: "bg-rose-100 text-rose-700",
   MANAGER: "bg-amber-100 text-amber-700",
-  MEMBER: "bg-slate-100 text-slate-600",
 };
 
 export function AppShell() {

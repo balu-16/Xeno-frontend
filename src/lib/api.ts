@@ -81,7 +81,16 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: "ADMIN" | "MANAGER" | "MEMBER";
+  role: "ADMIN" | "MANAGER";
+  approvalStatus: "PENDING" | "APPROVED" | "REJECTED";
+};
+
+export type Manager = {
+  id: string;
+  name: string;
+  email: string;
+  approvalStatus: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt: string;
 };
 
 export type PageMeta = {
@@ -190,7 +199,7 @@ export type AIMessage = {
 
 export const api = {
   register: (name: string, email: string, password: string) =>
-    request<{ user: User }>("/auth/register", {
+    request<{ pendingApproval: true; message: string }>("/auth/register", {
       method: "POST",
       body: JSON.stringify({ name, email, password }),
     }),
@@ -379,4 +388,21 @@ export const api = {
   insightCorrelation: (id: string) =>
     request<InsightCorrelationView>(`/insights/correlations/${id}`),
   insightDriftMetrics: () => request<DriftMetricsView[]>("/insights/drift"),
+  pendingManagers: () =>
+    request<{ managers: Manager[] }>("/auth/managers/pending"),
+  allManagers: () =>
+    request<{ managers: Manager[] }>("/auth/managers"),
+  approveManager: (id: string) =>
+    request<{ manager: Manager }>(`/auth/managers/${id}/approve`, {
+      method: "POST",
+    }),
+  rejectManager: (id: string) =>
+    request<{ manager: Manager }>(`/auth/managers/${id}/reject`, {
+      method: "POST",
+    }),
+  deleteManager: (id: string) =>
+    request<{ manager: Pick<Manager, "id" | "name" | "email"> }>(
+      `/auth/managers/${id}`,
+      { method: "DELETE" },
+    ),
 };

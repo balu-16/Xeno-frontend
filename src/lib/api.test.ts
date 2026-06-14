@@ -37,6 +37,7 @@ describe("api.me", () => {
               email: "test@test.com",
               name: "Test",
               role: "ADMIN",
+              approvalStatus: "APPROVED",
             },
           },
         }),
@@ -72,7 +73,7 @@ describe("api.login", () => {
         Promise.resolve({
           success: true,
           data: {
-            user: { id: "1", email: "a@b.com", name: "A", role: "MEMBER" },
+            user: { id: "1", email: "a@b.com", name: "A", role: "MANAGER", approvalStatus: "APPROVED" },
           },
         }),
     });

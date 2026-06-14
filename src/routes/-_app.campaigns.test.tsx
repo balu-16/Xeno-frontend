@@ -122,6 +122,7 @@ describe("Campaigns page", () => {
         name: "Admin",
         email: "admin@test.com",
         role: "ADMIN",
+        approvalStatus: "APPROVED",
       },
     });
     mockSegments.mockResolvedValue({
